@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Engine\EngineConfig;
+use App\Managers\SystemOneManager;
 use App\SystemOne\SystemOneClient;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\ServiceProvider;
+use Psr\Log\LoggerInterface;
 
 /**
  * @phpstan-import-type EngineConfigArray from EngineConfig
@@ -37,6 +39,13 @@ class AppServiceProvider extends ServiceProvider
                 (string) $config->get('manager.model'),
                 (int) $config->get('manager.timeout'),
             );
+        });
+
+        $this->app->bind(SystemOneManager::class, function (Application $app): SystemOneManager {
+            /** @var array<string, array<string, mixed>> $questions */
+            $questions = $app->make('config')->get('manager.questions');
+
+            return new SystemOneManager($app->make(SystemOneClient::class), $questions, $app->make(LoggerInterface::class));
         });
     }
 
