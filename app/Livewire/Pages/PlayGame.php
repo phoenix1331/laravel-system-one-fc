@@ -148,7 +148,9 @@ class PlayGame extends Component
             'goals' => $this->goalMarkers(),
             'possession' => $this->possession($state),
             'mentalities' => Mentality::cases(),
-        ])->title("{$this->game->humanTeam->name} v {$this->game->modelTeam->name}");
+        ])
+            ->title("{$this->game->humanTeam->name} v {$this->game->modelTeam->name}")
+            ->layoutData(['context' => "Cymru Premier · friendly · model {$this->game->model}"]);
     }
 
     private function refreshGame(): void
