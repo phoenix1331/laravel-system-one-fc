@@ -26,8 +26,11 @@ return [
         'd3:4b' => 'd3:4b · needs 16 GB, thinks harder',
     ],
 
-    // Seconds. d3:2b on a CPU takes 11 to 13 seconds per decision.
-    'timeout' => (int) env('SYSTEM_ONE_TIMEOUT', 30),
+    // Seconds. d3:2b on a CPU takes 11 to 30 seconds per decision, longer when the machine is short of memory.
+    'timeout' => (int) env('SYSTEM_ONE_TIMEOUT', 60),
+
+    // The substitution question adds about a quarter to every request, so it is only asked from this minute.
+    'substitutions_from_minute' => (int) env('SYSTEM_ONE_SUBSTITUTIONS_FROM', 55),
 
     'questions' => [
 

@@ -23,12 +23,14 @@ final readonly class SystemOneManager implements Manager
 {
     /**
      * @param  array<string, array<string, mixed>>  $questions  keyed by question id, as in config/manager.php
+     * @param  int  $substitutionsFromMinute  the substitution question is left out before this minute
      */
     public function __construct(
         private SystemOneClient $client,
         private array $questions,
         private LoggerInterface $logger,
         private Manager $fallback = new RuleBasedManager,
+        private int $substitutionsFromMinute = 0,
     ) {}
 
     public function decide(DecisionContext $context): Decision
@@ -56,7 +58,7 @@ final readonly class SystemOneManager implements Manager
 
     public function withModel(string $model): self
     {
-        return new self($this->client->withModel($model), $this->questions, $this->logger, $this->fallback);
+        return new self($this->client->withModel($model), $this->questions, $this->logger, $this->fallback, $this->substitutionsFromMinute);
     }
 
     /**
@@ -92,7 +94,8 @@ final readonly class SystemOneManager implements Manager
     }
 
     /**
-     * Every configured question, except substitutions once all three are used.
+     * Every configured question, except substitutions early on or once all three are used.
+     * Fewer questions means fewer tokens, and a faster answer on a CPU.
      *
      * @return array<string, array<string, mixed>>
      */
@@ -100,7 +103,7 @@ final readonly class SystemOneManager implements Manager
     {
         $questions = $this->questions;
 
-        if ($context->subsLeft === 0) {
+        if ($context->subsLeft === 0 || $context->minute < $this->substitutionsFromMinute) {
             unset($questions['substitution']);
         }
 

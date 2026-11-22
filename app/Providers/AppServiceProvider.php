@@ -42,10 +42,16 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(SystemOneManager::class, function (Application $app): SystemOneManager {
+            $config = $app->make('config');
             /** @var array<string, array<string, mixed>> $questions */
-            $questions = $app->make('config')->get('manager.questions');
+            $questions = $config->get('manager.questions');
 
-            return new SystemOneManager($app->make(SystemOneClient::class), $questions, $app->make(LoggerInterface::class));
+            return new SystemOneManager(
+                $app->make(SystemOneClient::class),
+                $questions,
+                $app->make(LoggerInterface::class),
+                substitutionsFromMinute: (int) $config->get('manager.substitutions_from_minute'),
+            );
         });
     }
 

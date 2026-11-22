@@ -149,3 +149,22 @@ it('falls back on a substitution that does not exist', function (): void {
 
     expect(app(SystemOneManager::class)->decide(losingLate())->fallbackUsed)->toBeTrue();
 });
+
+it('only asks about substitutions from the configured minute', function (): void {
+    config(['manager.substitutions_from_minute' => 55]);
+    Http::fake(['*' => Http::response(modelAnswers())]);
+    $early = new DecisionContext(...[...get_object_vars(losingLate()), 'minute' => 30]);
+
+    app(SystemOneManager::class)->decide($early);
+    app(SystemOneManager::class)->withModel('d3:4b')->decide(losingLate());
+
+    $questions = Http::recorded(fn ($request): bool => str_ends_with($request->url(), '/v1/systemone'))
+        ->map(fn (array $pair): array => array_keys($pair[0]->data()['questions']))
+        ->values()
+        ->all();
+
+    expect($questions)->toBe([
+        ['mentality', 'press_high', 'concern'],
+        ['mentality', 'press_high', 'substitution', 'concern'],
+    ]);
+});

@@ -179,7 +179,7 @@ The answers object holds `mentality` (choice shape), `press_high` (noul shape) a
 | Choice options | 27 accepted; Ollama documents 26 as the maximum, so stay at or below it |
 | Latency, `d3:2b` on CPU in WSL | First call (model load) about 17 s; warm three-question call 11 to 12.5 s |
 
-Latency is why `SYSTEM_ONE_TIMEOUT` defaults to 30 seconds: at 10 seconds a CPU-only machine falls back to the rule-based bot on every decision. Machines with a GPU answer far faster.
+Latency is why `SYSTEM_ONE_TIMEOUT` defaults to 60 seconds: at 10 seconds a CPU-only machine falls back to the rule-based bot on every decision. With the substitution question added a request is about 1,200 tokens and took 20 to 30 s on the same machine, and 45 to 60 s once it was short of memory and swapping. Ollama answers one request per model at a time, so a benchmark running alongside a game makes both time out. Machines with a GPU answer far faster.
 
 ## Errors
 
