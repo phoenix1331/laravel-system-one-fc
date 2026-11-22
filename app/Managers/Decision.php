@@ -33,6 +33,19 @@ final readonly class Decision
         return new self($tactics->mentality, $tactics->pressHigh);
     }
 
+    /**
+     * The most likely mentalities according to the model, highest first. Empty for non-model decisions.
+     *
+     * @return array<string, float>
+     */
+    public function topMentalities(int $count = 2): array
+    {
+        $probabilities = $this->probabilities['mentality'] ?? [];
+        arsort($probabilities);
+
+        return array_slice($probabilities, 0, $count, preserve_keys: true);
+    }
+
     public function tactics(): Tactics
     {
         return new Tactics($this->mentality, $this->pressHigh);

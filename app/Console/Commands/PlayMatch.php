@@ -10,7 +10,9 @@ use App\Engine\MatchState;
 use App\Engine\Side;
 use App\Managers\Decision;
 use App\Managers\DecisionContext;
+use App\Managers\Manager;
 use App\Managers\RuleBasedManager;
+use App\Managers\SystemOneManager;
 use App\Models\Team;
 use App\Simulation\Commentator;
 use App\Simulation\EngineFactory;
@@ -18,7 +20,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('fc:play {home : Home club name} {away : Away club name} {--seed= : Replay a match from its seed}')]
+#[Signature('fc:play {home : Home club name} {away : Away club name} {--seed= : Replay a match from its seed} {--model= : Let System One manage the away side, optionally naming the model, e.g. --model=d3:4b}')]
 #[Description('Play a full match in the terminal between two managers')]
 class PlayMatch extends Command
 {
@@ -33,7 +35,10 @@ class PlayMatch extends Command
 
         $seed = $this->option('seed') !== null ? (int) $this->option('seed') : random_int(1, PHP_INT_MAX);
 
-        $this->components->info("{$home->name} v {$away->name}, seed {$seed}");
+        $awayManager = $this->awayManager();
+        $awayLabel = $awayManager instanceof SystemOneManager ? "System One ({$awayManager->model()})" : 'rules';
+
+        $this->components->info("{$home->name} (rules) v {$away->name} ({$awayLabel}), seed {$seed}");
 
         $runner = $engines->runner($seed);
         $state = $engines->forSeed($seed)->kickOff($home->toTeamState(), $away->toTeamState());
@@ -41,19 +46,30 @@ class PlayMatch extends Command
         $runner->play(
             $state,
             new RuleBasedManager,
-            new RuleBasedManager,
+            $awayManager,
             onEvents: function (array $events, MatchState $state) use ($commentator): void {
                 foreach ($events as $event) {
                     $this->printEvent($event, $state, $commentator);
                 }
             },
-            onDecision: function (Side $side, DecisionContext $context, Decision $decision, MatchState $state) use ($commentator): void {
-                // Only report a decision at kick-off or when it changes something.
-                if ($context->minute > 0 && $decision->tactics() == $context->tactics) {
+            onDecision: function (Side $side, DecisionContext $context, Decision $decision, MatchState $state) use ($commentator, $awayManager): void {
+                $isModel = $side === Side::Away && $awayManager instanceof SystemOneManager;
+
+                // Bot decisions are only reported at kick-off or when they change something; the model's always are.
+                if (! $isModel && $context->minute > 0 && $decision->tactics() == $context->tactics) {
                     return;
                 }
 
-                $this->line(sprintf('  <fg=gray>%6s  %s</>', $context->clock, $commentator->describeDecision($side, $decision, $state)));
+                $line = sprintf('%6s  %s', $context->clock, $commentator->describeDecision($side, $decision, $state));
+
+                if (! $isModel) {
+                    $this->line("  <fg=gray>{$line}</>");
+
+                    return;
+                }
+
+                $this->line("  <fg=yellow>{$line}</>");
+                $this->line('          <fg=yellow>'.$this->modelWorking($decision).'</>');
             },
         );
 
@@ -67,6 +83,49 @@ class PlayMatch extends Command
         $this->line("Replay this match with --seed={$seed}");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * --model on its own uses the configured model; --model=d3:4b picks another.
+     */
+    private function awayManager(): Manager
+    {
+        if (! $this->input->hasParameterOption('--model')) {
+            return new RuleBasedManager;
+        }
+
+        $model = $this->option('model');
+
+        if (is_string($model) && $model !== '') {
+            config(['manager.model' => $model]);
+        }
+
+        return app(SystemOneManager::class);
+    }
+
+    /**
+     * E.g. "ATTACKING 0.58, all out attack 0.27 | press 0.73 | concern 3/5 | 12.4s"
+     */
+    private function modelWorking(Decision $decision): string
+    {
+        if ($decision->fallbackUsed) {
+            return '[fallback] the model did not answer, so the rule-based bot chose';
+        }
+
+        $mentalities = [];
+
+        foreach ($decision->topMentalities() as $key => $probability) {
+            $label = $key === $decision->mentality->value ? strtoupper(str_replace('_', ' ', $key)) : str_replace('_', ' ', $key);
+            $mentalities[] = sprintf('%s %.2f', $label, $probability);
+        }
+
+        return sprintf(
+            '%s | press %.2f | concern %d/5 | %.1fs',
+            implode(', ', $mentalities),
+            $decision->probabilities['press_high']['true'] ?? 0,
+            $decision->concern ?? 0,
+            ($decision->responseMs ?? 0) / 1000,
+        );
     }
 
     private function findTeam(string $name): ?Team
