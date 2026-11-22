@@ -20,7 +20,20 @@ final readonly class EngineFactory
 
     public function forSeed(int $seed): MatchEngine
     {
-        return new MatchEngine($this->config, new Randomizer(new Mt19937($seed)));
+        return $this->withRandomizer($this->randomizer($seed));
+    }
+
+    public function randomizer(int $seed): Randomizer
+    {
+        return new Randomizer(new Mt19937($seed));
+    }
+
+    /**
+     * An engine that carries on from a Randomizer saved part-way through a match.
+     */
+    public function withRandomizer(Randomizer $random): MatchEngine
+    {
+        return new MatchEngine($this->config, $random);
     }
 
     public function runner(int $seed): MatchRunner
