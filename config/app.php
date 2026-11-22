@@ -56,6 +56,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Shown as the GitHub link in the header; the link is hidden when empty.
+    'repository_url' => env('APP_REPOSITORY_URL'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
