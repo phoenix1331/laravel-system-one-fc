@@ -8,6 +8,7 @@ System One FC is a Laravel 13 playground: the player manages a Welsh club for 90
 |------|-------|
 | `app/Engine/` | Pure PHP match engine: enums, value objects, per-minute loop. No Laravel or AI dependencies; randomness through an injected seeded `Random\Randomizer` |
 | `app/Managers/` | `Manager` interface and implementations: human, rule-based, System One |
+| `app/Simulation/` | `MatchRunner` (engine + two managers, decides at every decision point), `EngineFactory` (seeded engines), template `Commentator` |
 | `app/SystemOne/` | HTTP client for Ollama `/v1/systemone`, request payload and response mapping |
 | `app/Console/Commands/` | `fc:play`, `fc:simulate` |
 | `app/Livewire/` | Home, match and full-time screens |
