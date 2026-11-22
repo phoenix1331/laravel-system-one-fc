@@ -34,7 +34,7 @@ return [
 
     // A shot scores with probability base * attack / defence.
     'goal' => [
-        'base' => 0.10,
+        'base' => 0.11,
         'min' => 0.03,
         'max' => 0.25,
     ],
