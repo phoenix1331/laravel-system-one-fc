@@ -161,7 +161,8 @@ it('gives the stronger midfield more of the ball', function (): void {
 });
 
 it('clamps shot and goal probabilities', function (float $attack, float $defence, float $shot, float $goal): void {
-    $engine = seededEngine();
+    // Pin the base rates so tuning config/engine.php does not break this test.
+    $engine = seededEngine(overrides: ['shot' => ['base' => 0.25], 'goal' => ['base' => 0.10]]);
     $attacking = new EffectiveRatings($attack, 50, 50);
     $defending = new EffectiveRatings(50, 50, $defence);
 
