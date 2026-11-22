@@ -10,6 +10,7 @@ use Database\Factories\TeamFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * A club with invented ratings from 1 to 100.
@@ -35,6 +36,19 @@ class Team extends Model
             'defence' => 'integer',
             'fitness' => 'integer',
         ];
+    }
+
+    /**
+     * Public URL of a club's badge, or null when there is no badge file for it.
+     *
+     * Badges live in public/img/badges/<slug>.png, named after the club, and
+     * come from footylogos.com (see the README).
+     */
+    public static function badgeUrl(string $name): ?string
+    {
+        $path = 'img/badges/'.Str::slug($name).'.png';
+
+        return is_file(public_path($path)) ? asset($path) : null;
     }
 
     public function ratings(): TeamRatings

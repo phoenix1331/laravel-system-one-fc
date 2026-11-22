@@ -14,7 +14,10 @@
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div>
                 <span class="inline-block rounded-full bg-you-chip px-3 py-1 text-xs font-semibold text-you-text">You</span>
-                <p class="mt-2 font-display text-xl font-bold sm:text-3xl">{{ $human->name }}</p>
+                <div class="mt-2 flex items-center gap-3">
+                    <x-club-badge :name="$human->name" size="size-10 sm:size-14" />
+                    <p class="font-display text-xl font-bold sm:text-3xl">{{ $human->name }}</p>
+                </div>
             </div>
 
             <div class="text-center">
@@ -26,7 +29,10 @@
 
             <div class="text-right">
                 <span class="inline-block rounded-full bg-s1-chip px-3 py-1 text-xs font-semibold text-s1-text">System One</span>
-                <p class="mt-2 font-display text-xl font-bold sm:text-3xl">{{ $model->name }}</p>
+                <div class="mt-2 flex items-center justify-end gap-3">
+                    <p class="font-display text-xl font-bold sm:text-3xl">{{ $model->name }}</p>
+                    <x-club-badge :name="$model->name" size="size-10 sm:size-14" />
+                </div>
             </div>
         </div>
 

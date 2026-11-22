@@ -40,6 +40,10 @@
 
             @if ($this->selectedTeam)
                 <dl class="panel flex flex-col gap-3 p-5" aria-label="{{ $this->selectedTeam->name }} ratings">
+                    <div class="mb-1 flex items-center gap-3">
+                        <x-club-badge :name="$this->selectedTeam->name" size="size-12" />
+                        <span class="font-display text-lg font-bold">{{ $this->selectedTeam->name }}</span>
+                    </div>
                     @foreach (['attack' => 'Attack', 'midfield' => 'Midfield', 'defence' => 'Defence', 'fitness' => 'Fitness'] as $rating => $label)
                         <div class="grid grid-cols-[88px_1fr_32px] items-center gap-4" wire:key="rating-{{ $rating }}">
                             <dt class="text-sm text-muted">{{ $label }}</dt>
@@ -103,6 +107,6 @@
 
     <footer class="flex flex-col gap-2 border-t border-line pt-6 text-sm text-muted sm:flex-row sm:justify-between">
         <p>Runs locally on Ollama · model <span class="font-mono font-medium text-text">{{ $defaultModel }}</span></p>
-        <p>Club ratings are invented for the game</p>
+        <p>Club ratings are invented for the game · badges from <a href="https://www.footylogos.com/" class="underline hover:text-text" rel="noopener noreferrer" target="_blank">footylogos.com</a></p>
     </footer>
 </div>

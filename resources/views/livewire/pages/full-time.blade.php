@@ -4,11 +4,17 @@
         <p class="font-mono text-sm tracking-[0.2em] text-muted">FULL TIME</p>
 
         <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <span class="font-display text-2xl font-bold sm:text-3xl">{{ $game->humanTeam->name }}</span>
+            <span class="flex items-center gap-3 font-display text-2xl font-bold sm:text-3xl">
+                <x-club-badge :name="$game->humanTeam->name" size="size-12 sm:size-16" />
+                {{ $game->humanTeam->name }}
+            </span>
             <span class="font-mono text-[clamp(56px,9vw,84px)] leading-none font-medium">
                 <span class="text-you">{{ $game->human_score }}</span><span class="mx-3 text-line-strong">-</span><span class="text-s1">{{ $game->model_score }}</span>
             </span>
-            <span class="font-display text-2xl font-bold sm:text-3xl">{{ $game->modelTeam->name }}</span>
+            <span class="flex items-center gap-3 font-display text-2xl font-bold sm:text-3xl">
+                {{ $game->modelTeam->name }}
+                <x-club-badge :name="$game->modelTeam->name" size="size-12 sm:size-16" />
+            </span>
         </div>
 
         <h1 class="mt-6 font-display text-3xl font-bold tracking-tight sm:text-4xl">{{ $verdict->headline() }}</h1>
