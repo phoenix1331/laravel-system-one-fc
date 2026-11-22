@@ -1,0 +1,34 @@
+@baseUrl = http://localhost:8000
+@ollamaUrl = http://localhost:11434
+@model = d3:2b
+
+### Health
+
+# Laravel's built-in health check - confirms the app boots
+GET {{baseUrl}}/up
+
+### Ollama
+
+# Lists the models Ollama has pulled - d3:2b must be here
+GET {{ollamaUrl}}/api/tags
+
+### System One
+
+# Yes/no question: answers.says_hello.noul is the probability of yes
+POST {{ollamaUrl}}/v1/systemone
+Content-Type: application/json
+
+{
+  "model": "{{model}}",
+  "state": "Hello World",
+  "questions": {
+    "says_hello": {
+      "type": "noul",
+      "instructions": "Does the state text contain a greeting?",
+      "criteria": {
+        "true": "The state text contains a greeting.",
+        "false": "The state text does not contain a greeting."
+      }
+    }
+  }
+}
