@@ -64,6 +64,16 @@
                 @error('opponentId') <p class="text-sm text-s1-text">{{ $message }}</p> @enderror
             </div>
 
+            <div class="flex flex-col gap-3">
+                <label for="model" class="label">System One model</label>
+                <select id="model" wire:model="model" class="field">
+                    @foreach ($this->models() as $value => $label)
+                        <option value="{{ $value }}" wire:key="model-{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('model') <p class="text-sm text-s1-text">{{ $message }}</p> @enderror
+            </div>
+
             <button type="submit" class="btn-primary w-full" wire:loading.attr="disabled">
                 Kick off
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
@@ -92,7 +102,7 @@
     </section>
 
     <footer class="flex flex-col gap-2 border-t border-line pt-6 text-sm text-muted sm:flex-row sm:justify-between">
-        <p>Runs locally on Ollama · model <span class="font-mono font-medium text-text">{{ $model }}</span></p>
+        <p>Runs locally on Ollama · model <span class="font-mono font-medium text-text">{{ $defaultModel }}</span></p>
         <p>Club ratings are invented for the game</p>
     </footer>
 </div>

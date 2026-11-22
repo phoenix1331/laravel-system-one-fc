@@ -20,6 +20,12 @@ return [
 
     'model' => env('SYSTEM_ONE_MODEL', 'd3:2b'),
 
+    // The models a player can pick on the home page. Each must be pulled first: ollama pull d3:4b
+    'models' => [
+        'd3:2b' => 'd3:2b · fits 8 GB of RAM',
+        'd3:4b' => 'd3:4b · needs 16 GB, thinks harder',
+    ],
+
     // Seconds. d3:2b on a CPU takes 11 to 13 seconds per decision.
     'timeout' => (int) env('SYSTEM_ONE_TIMEOUT', 30),
 

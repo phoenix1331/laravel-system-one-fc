@@ -51,7 +51,7 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h2 class="font-display text-2xl font-bold">Inside the System One dugout</h2>
-                <p class="mt-1 text-muted">Every call it made, how sure it was, and the runner-up option.</p>
+                <p class="mt-1 text-muted">Every call <span class="font-mono text-text">{{ $game->model }}</span> made, how sure it was, and the runner-up option.</p>
             </div>
             <p class="flex items-center gap-2 text-sm text-muted">
                 <span class="size-4 rounded border border-dashed border-muted" aria-hidden="true"></span>

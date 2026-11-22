@@ -81,6 +81,8 @@ it('logs every model decision with its confidence, runner-up and concern', funct
 
     $this->get(route('games.result', $game))
         ->assertSee('Inside the System One dugout')
+        ->assertSee('Every call')
+        ->assertSee('d3:2b')
         ->assertSee('0.64')
         ->assertSee('Next: Balanced 0.21')
         ->assertSee('Concern 3 of 5')

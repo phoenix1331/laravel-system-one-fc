@@ -104,3 +104,33 @@ it('shows the record of finished games against humans', function (): void {
     Livewire::test(Home::class)
         ->assertSeeHtmlInOrder(['Human wins</dt>', 'text-you">2</dd>', 'Draws</dt>', '">1</dd>', 'System One wins</dt>', 'text-s1">1</dd>']);
 });
+
+it('offers the configured models with the default selected', function (): void {
+    Livewire::test(Home::class)
+        ->assertSet('model', 'd3:2b')
+        ->assertSee('d3:2b · fits 8 GB of RAM')
+        ->assertSee('d3:4b · needs 16 GB, thinks harder');
+});
+
+it('always offers the configured default model', function (): void {
+    config(['manager.model' => 'my-d3-finetune']);
+
+    expect((new Home)->models())->toHaveKeys(['my-d3-finetune', 'd3:2b', 'd3:4b']);
+});
+
+it('stores the picked model on the game', function (): void {
+    Livewire::test(Home::class)
+        ->set('model', 'd3:4b')
+        ->call('kickOff');
+
+    expect(Game::query()->first()->model)->toBe('d3:4b');
+});
+
+it('refuses a model that is not on the list', function (): void {
+    Livewire::test(Home::class)
+        ->set('model', 'gpt-5')
+        ->call('kickOff')
+        ->assertHasErrors(['model']);
+
+    expect(Game::query()->count())->toBe(0);
+});
