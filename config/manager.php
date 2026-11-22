@@ -27,13 +27,14 @@ return [
 
         'mentality' => [
             'type' => 'choice',
-            'instructions' => 'You manage my_team in a 90-minute football match. Weigh the minute, the score (us against them), recent possession and shots, and both teams\' fitness. Which mentality should my_team play with from now on?',
+            'instructions' => 'You manage my_team in a 90-minute football match. score.us is my_team\'s goals and score.them is the opponent\'s. A team that is behind late on needs goals and must take more risk; a team that is ahead late on should protect its lead; early on or when level, stay balanced. Which mentality should my_team play with now?',
+            // Saying when each option is used, not only what it does, is what stopped d3:2b anchoring on "balanced".
             'criteria' => [
-                'park_the_bus' => 'All players defend deep; accept very few chances to protect the score',
-                'defensive' => 'Sit deeper and stay compact, creating fewer chances but conceding fewer',
-                'balanced' => 'An even split between attack and defence',
-                'attacking' => 'Push extra players forward to create more chances, leaving more space behind',
-                'all_out_attack' => 'Throw everyone forward to chase a goal, leaving the defence badly exposed',
+                'park_the_bus' => 'Everyone defends deep to protect a lead late in the match, accepting almost no chances',
+                'defensive' => 'Sit deeper and stay compact to hold on to a lead, creating fewer chances but conceding fewer',
+                'balanced' => 'An even split between attack and defence, the normal approach when the match is level or there is plenty of time left',
+                'attacking' => 'Push extra players forward to create more chances when a goal is needed, leaving more space behind',
+                'all_out_attack' => 'Throw everyone forward to chase a goal when losing near the end, leaving the defence badly exposed',
             ],
         ],
 
