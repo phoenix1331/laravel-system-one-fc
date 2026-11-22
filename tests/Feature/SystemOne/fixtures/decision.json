@@ -1,0 +1,32 @@
+{
+  "model": "d3:2b",
+  "answers": {
+    "mentality": {
+      "type": "choice",
+      "choice": "balanced",
+      "probabilities": {
+        "park_the_bus": 0.08066395495428658,
+        "defensive": 0.17626223918140424,
+        "balanced": 0.520841166931317,
+        "attacking": 0.21269112581476327,
+        "all_out_attack": 0.009541513118228998
+      },
+      "confidence": 0.2404881520743114
+    },
+    "press_high": { "type": "noul", "noul": 0.0867820511700006 },
+    "concern": {
+      "type": "score",
+      "score": 0.16667522785511812,
+      "legend": { "0": "Calm", "1": "Slightly uneasy", "2": "Uneasy", "3": "Worried", "4": "Very worried" },
+      "probabilities": {
+        "0": 0.8967606677928338,
+        "1": 0.05527804534450165,
+        "2": 0.03422430568674879,
+        "3": 0.011999353566543417,
+        "4": 0.0017376276093721526
+      },
+      "confidence": 0.7282383984532041
+    }
+  },
+  "usage": { "input_tokens": 711, "output_tokens": 0 }
+}

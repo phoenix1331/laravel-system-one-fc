@@ -9,7 +9,7 @@ System One FC is a Laravel 13 playground: the player manages a Welsh club for 90
 | `app/Engine/` | Pure PHP match engine: enums, value objects, per-minute loop. No Laravel or AI dependencies; randomness through an injected seeded `Random\Randomizer` |
 | `app/Managers/` | `Manager` interface and implementations: human, rule-based, System One |
 | `app/Simulation/` | `MatchRunner` (engine + two managers, decides at every decision point), `EngineFactory` (seeded engines), template `Commentator` |
-| `app/SystemOne/` | HTTP client for Ollama `/v1/systemone`, request payload and response mapping |
+| `app/SystemOne/` | `SystemOneClient` (Laravel HTTP client, one request per decision point, throws `SystemOneException` on any failure) and `Answers` (typed, shape-checked reads by question id) |
 | `app/Console/Commands/` | `fc:play`, `fc:simulate` |
 | `app/Livewire/` | Home, match and full-time screens |
 | `app/Models/` | `Team`, `Game`, `Decision`, `GameEvent` |
@@ -34,7 +34,7 @@ No Docker, FrankenPHP or Herd: the brief targets a plain laptop setup anyone can
 
 | Integration | Used for | Config |
 |-------------|----------|--------|
-| Ollama System One API | Model manager decisions; shapes in `docs/systemone-api.md` | `OLLAMA_URL`, `SYSTEM_ONE_MODEL` (`d3:2b`, or `d3:4b` on 16 GB), `SYSTEM_ONE_TIMEOUT` (seconds, default 30) |
+| Ollama System One API | Model manager decisions; shapes in `docs/systemone-api.md` | `OLLAMA_URL`, `SYSTEM_ONE_MODEL` (`d3:2b`, or `d3:4b` on 16 GB), `SYSTEM_ONE_TIMEOUT` (seconds, default 30), all read in `config/manager.php` alongside the question wording |
 
 ## Decisions
 
@@ -54,4 +54,6 @@ No Docker, FrankenPHP or Herd: the brief targets a plain laptop setup anyone can
 - Ollama on Windows, app in WSL: `localhost` only reaches Windows with WSL mirrored networking (`networkingMode=mirrored` in `.wslconfig`). Otherwise set `OLLAMA_HOST=0.0.0.0` on Windows and point `OLLAMA_URL` at the Windows host IP
 - `score` criteria is an array (2 to 10 levels, zero-indexed answers); `choice` criteria is an object. `confidence` is not the winning probability
 - `d3:2b` on CPU takes 11 to 12.5 s per warm decision request, which is why the timeout default is 30 s, not the brief's 10 s
+- A cold model load plus the first decision took 41 s, over the 30 s timeout; Ollama unloads idle models after 5 minutes, so the first decision of a session may fall back
+- With the current wording `d3:2b` leans heavily towards `balanced` (it anchors on `current_mentality`); the scenario tests are the check on wording changes
 - WSL gets half the machine's RAM by default; `d3:4b` can be OOM-killed on 8 GB machines
