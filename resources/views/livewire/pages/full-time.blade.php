@@ -13,6 +13,11 @@
 
         <h1 class="mt-6 font-display text-3xl font-bold tracking-tight sm:text-4xl">{{ $verdict->headline() }}</h1>
         <p class="mx-auto mt-4 max-w-xl text-muted">{{ $verdict->goals() }}</p>
+
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <button type="button" wire:click="rematch" class="btn-primary" wire:loading.attr="disabled">Rematch</button>
+            <a href="{{ route('home') }}" class="btn-secondary">Pick another club</a>
+        </div>
     </section>
 
     {{-- Stat tiles --}}

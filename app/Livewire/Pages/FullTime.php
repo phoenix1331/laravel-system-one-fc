@@ -7,6 +7,7 @@ namespace App\Livewire\Pages;
 use App\Engine\Mentality;
 use App\Engine\Side;
 use App\Enums\Dugout;
+use App\Games\GameRunner;
 use App\Games\Verdict;
 use App\Models\Game;
 use App\Models\GameDecision;
@@ -36,6 +37,16 @@ class FullTime extends Component
         if (! $this->game->isFinished()) {
             $this->redirectRoute('games.show', $this->game, navigate: false);
         }
+    }
+
+    /**
+     * Same clubs, same model, a fresh seed.
+     */
+    public function rematch(GameRunner $runner): void
+    {
+        $game = $runner->start($this->game->humanTeam, $this->game->modelTeam, $this->game->model);
+
+        $this->redirectRoute('games.show', $game, navigate: false);
     }
 
     public function render(): View

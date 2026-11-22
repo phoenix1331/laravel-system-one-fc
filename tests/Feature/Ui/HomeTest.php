@@ -91,3 +91,16 @@ it('needs a real club', function (): void {
         ->call('kickOff')
         ->assertHasErrors(['teamId' => 'exists']);
 });
+
+it('shows the record of finished games against humans', function (): void {
+    Game::factory()->finished(2, 1)->create();
+    Game::factory()->finished(3, 0)->create();
+    Game::factory()->finished(1, 1)->create();
+    Game::factory()->finished(0, 2)->create();
+    Game::factory()->create();
+
+    expect(Game::record())->toBe(['human' => 2, 'draws' => 1, 'model' => 1]);
+
+    Livewire::test(Home::class)
+        ->assertSeeHtmlInOrder(['Human wins</dt>', 'text-you">2</dd>', 'Draws</dt>', '">1</dd>', 'System One wins</dt>', 'text-s1">1</dd>']);
+});

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Pages;
 
 use App\Games\GameRunner;
+use App\Models\Game;
 use App\Models\Team;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -66,6 +67,7 @@ class Home extends Component
     public function render(): View
     {
         return view('livewire.pages.home', [
+            'record' => Game::record(),
             'minutesToPlay' => (int) round(90 * (float) config('game.seconds_per_minute') / 60),
             'model' => (string) config('manager.model'),
         ]);

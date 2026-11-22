@@ -14,6 +14,15 @@
                 Pick a Welsh club, set your tactics and manage 90 minutes against a decision model running on your own machine.
                 It sees what you see. It decides when you decide.
             </p>
+
+            <dl class="mt-10 flex gap-12" aria-label="Record against humans">
+                @foreach ([['human', 'Human wins', 'text-you'], ['draws', 'Draws', 'text-text'], ['model', 'System One wins', 'text-s1']] as [$key, $label, $colour])
+                    <div class="flex flex-col-reverse gap-2" wire:key="record-{{ $key }}">
+                        <dt class="text-sm text-muted">{{ $label }}</dt>
+                        <dd class="font-mono text-4xl {{ $colour }}">{{ $record[$key] }}</dd>
+                    </div>
+                @endforeach
+            </dl>
         </div>
 
         <form wire:submit="kickOff" class="card flex flex-col gap-6 p-6 sm:p-8">

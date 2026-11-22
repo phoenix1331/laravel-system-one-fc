@@ -7,6 +7,7 @@ use App\Enums\Dugout;
 use App\Enums\GameStatus;
 use App\Games\GameRunner;
 use App\Games\Verdict;
+use App\Livewire\Pages\FullTime;
 use App\Managers\Decision;
 use App\Managers\RuleBasedManager;
 use App\Models\Game;
@@ -144,4 +145,20 @@ it('shows the model-only decisions of a bot game home side first', function (): 
     $game->update(['status' => GameStatus::Finished]);
 
     $this->get(route('games.result', $game))->assertSee('0 - 1');
+});
+
+it('starts a rematch with the same clubs and model but a new seed', function (): void {
+    $game = finishedGame(['human' => ["10'"]]);
+
+    Livewire\Livewire::test(FullTime::class, ['game' => $game])
+        ->assertSee('Pick another club')
+        ->call('rematch')
+        ->assertRedirect(route('games.show', Game::query()->latest('id')->first()));
+
+    $rematch = Game::query()->latest('id')->first();
+
+    expect($rematch->id)->not->toBe($game->id)
+        ->and($rematch->human_team_id)->toBe($game->human_team_id)
+        ->and($rematch->model_team_id)->toBe($game->model_team_id)
+        ->and($rematch->model)->toBe($game->model);
 });

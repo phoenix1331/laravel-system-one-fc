@@ -104,6 +104,22 @@ class Game extends Model
             ->first();
     }
 
+    /**
+     * Results of every finished game: human wins, draws and System One wins.
+     *
+     * @return array{human: int, draws: int, model: int}
+     */
+    public static function record(): array
+    {
+        $finished = self::query()->where('status', GameStatus::Finished);
+
+        return [
+            'human' => (clone $finished)->whereColumn('human_score', '>', 'model_score')->count(),
+            'draws' => (clone $finished)->whereColumn('human_score', '=', 'model_score')->count(),
+            'model' => (clone $finished)->whereColumn('human_score', '<', 'model_score')->count(),
+        ];
+    }
+
     public function isFinished(): bool
     {
         return $this->status === GameStatus::Finished;
