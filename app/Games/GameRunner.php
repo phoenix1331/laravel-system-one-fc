@@ -11,6 +11,7 @@ use App\Engine\MatchState;
 use App\Engine\Phase;
 use App\Enums\Dugout;
 use App\Enums\GameStatus;
+use App\Jobs\DecideForSystemOne;
 use App\Managers\Decision;
 use App\Managers\DecisionContext;
 use App\Models\Game;
@@ -186,12 +187,17 @@ final readonly class GameRunner
         $game->save();
     }
 
+    /**
+     * Pause play and ask System One straight away, so it is thinking while the player is.
+     */
     private function openDecisionPoint(Game $game): void
     {
         $game->update([
             'status' => GameStatus::Deciding,
             'decision_point' => $game->decision_point + 1,
         ]);
+
+        DecideForSystemOne::dispatch($game->id, $game->decision_point)->afterCommit();
     }
 
     private function save(Game $game, MatchState $state, Randomizer $random): void

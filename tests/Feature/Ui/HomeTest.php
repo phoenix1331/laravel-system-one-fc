@@ -7,10 +7,12 @@ use App\Livewire\Pages\Home;
 use App\Models\Game;
 use App\Models\Team;
 use Database\Seeders\TeamSeeder;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 
 beforeEach(function (): void {
     $this->seed(TeamSeeder::class);
+    Queue::fake();
 });
 
 it('shows the pitch, the clubs and the configured model', function (): void {

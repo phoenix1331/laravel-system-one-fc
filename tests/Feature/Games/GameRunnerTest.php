@@ -12,6 +12,12 @@ use App\Managers\RuleBasedManager;
 use App\Models\Game;
 use App\Models\GameEvent;
 use App\Models\Team;
+use Illuminate\Support\Facades\Queue;
+
+beforeEach(function (): void {
+    // These tests record the model's decisions themselves.
+    Queue::fake();
+});
 
 function runner(): GameRunner
 {

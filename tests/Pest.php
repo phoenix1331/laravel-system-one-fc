@@ -7,6 +7,7 @@ use App\Engine\MatchEngine;
 use App\Engine\TeamRatings;
 use App\Engine\TeamState;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 use Tests\TestCase;
@@ -14,6 +15,11 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature', 'Scenarios');
+
+// Feature tests must never reach a real Ollama by accident: fake every request they make.
+pest()->beforeEach(function (): void {
+    Http::preventStrayRequests();
+})->in('Feature');
 
 /**
  * The engine config straight from config/engine.php, without booting Laravel.

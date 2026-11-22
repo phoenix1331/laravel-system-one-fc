@@ -22,4 +22,30 @@ enum Mentality: string
             self::AllOutAttack => 'All out attack',
         };
     }
+
+    /**
+     * One line for the tactics panel: what picking this does on the pitch.
+     */
+    public function description(): string
+    {
+        return match ($this) {
+            self::ParkTheBus => 'Everyone behind the ball. Very hard to break down, very few chances.',
+            self::Defensive => 'Sit deeper and stay compact. Fewer chances at both ends.',
+            self::Balanced => 'An even split between attack and defence.',
+            self::Attacking => 'Push extra players forward. More chances, more space behind.',
+            self::AllOutAttack => 'Throw everyone forward and tire faster. Wide open at the back.',
+        };
+    }
+
+    /**
+     * Short label for the segmented control.
+     */
+    public function shortLabel(): string
+    {
+        return match ($this) {
+            self::ParkTheBus => 'Park bus',
+            self::AllOutAttack => 'All out',
+            default => $this->label(),
+        };
+    }
 }
