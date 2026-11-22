@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev migrate seed fresh test coverage lint analyse audit tinker artisan play scenarios
+.PHONY: help install dev migrate seed fresh test coverage lint analyse audit tinker artisan play simulate scenarios
 
 APP := php
 
@@ -49,6 +49,9 @@ tinker: ## open Tinker
 
 play: ## play a terminal match, e.g. make play ARGS="'Bala Town' 'Penybont' --seed=42"
 	@$(APP) artisan fc:play $(ARGS)
+
+simulate: ## benchmark System One against the bot, e.g. make simulate ARGS="10 --model=d3:4b"
+	@$(APP) artisan fc:simulate $(ARGS)
 
 artisan: ## run any artisan command, e.g. make artisan ARGS="route:list"
 	@$(APP) artisan $(ARGS)
