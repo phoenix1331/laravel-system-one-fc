@@ -25,6 +25,47 @@ final readonly class SystemOneClient
     }
 
     /**
+     * The same client pointed at a different model, e.g. d3:4b for one game.
+     */
+    public function withModel(string $model): self
+    {
+        return new self($this->http, $this->baseUrl, $model, $this->timeout);
+    }
+
+    /**
+     * Load the model into memory if Ollama has unloaded it, so the next real
+     * question is not eaten by a cold start. Ollama unloads idle models after
+     * five minutes, and loading d3:2b takes longer than a normal decision.
+     *
+     * Decision models cannot be preloaded with an empty /api/generate call,
+     * so this sends the smallest possible System One question instead.
+     * Any failure is ignored: the real request will report it.
+     */
+    public function warmUp(int $timeout = 180): void
+    {
+        try {
+            $loaded = $this->http->baseUrl($this->baseUrl)->acceptJson()->timeout(5)->get('/api/ps')->json('models');
+
+            // Not an Ollama we can read, so leave it alone.
+            if (! is_array($loaded)) {
+                return;
+            }
+
+            foreach ($loaded as $model) {
+                if (is_array($model) && ($model['name'] ?? null) === $this->model) {
+                    return;
+                }
+            }
+
+            $this->http->baseUrl($this->baseUrl)->acceptJson()->timeout($timeout)->post('/v1/systemone', $this->payload('warm up', [
+                'ready' => ['type' => 'noul', 'instructions' => 'Is this a test?'],
+            ]));
+        } catch (ConnectionException) {
+            return;
+        }
+    }
+
+    /**
      * Every question is answered in one request.
      *
      * @param  string|array<string, mixed>  $state  plain text, or structured data sent as JSON

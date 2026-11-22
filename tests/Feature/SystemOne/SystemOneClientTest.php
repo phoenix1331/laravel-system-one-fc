@@ -81,3 +81,40 @@ it('throws when the response has no answers', function (): void {
 
     app(SystemOneClient::class)->ask('state', []);
 })->throws(SystemOneException::class, 'no answers object');
+
+it('warms up a model Ollama has unloaded with a tiny question', function (): void {
+    Http::fake([
+        '*/api/ps' => Http::response(['models' => [['name' => 'llama3.2:latest']]]),
+        '*/v1/systemone' => Http::response(['answers' => ['ready' => ['type' => 'noul', 'noul' => 0.9]]]),
+    ]);
+
+    app(SystemOneClient::class)->warmUp();
+
+    Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/v1/systemone')
+        && ($request->data()['model'] ?? null) === 'd3:2b'
+        && array_keys(($request->data()['questions'] ?? null)) === ['ready']);
+});
+
+it('skips the warm up when the model is already loaded', function (): void {
+    Http::fake(['*/api/ps' => Http::response(['models' => [['name' => 'd3:2b']]])]);
+
+    app(SystemOneClient::class)->warmUp();
+
+    Http::assertSentCount(1);
+});
+
+it('skips the warm up when Ollama cannot say what is loaded', function (): void {
+    Http::fake(['*/api/ps' => Http::response('nope', 500)]);
+
+    app(SystemOneClient::class)->warmUp();
+
+    Http::assertSentCount(1);
+});
+
+it('ignores a warm up that cannot reach Ollama', function (): void {
+    Http::fake(fn () => throw new ConnectionException('refused'));
+
+    app(SystemOneClient::class)->warmUp();
+
+    Http::assertSentCount(0);
+});

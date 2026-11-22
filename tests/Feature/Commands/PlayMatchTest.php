@@ -56,7 +56,7 @@ it('lets System One manage the away side and prints its working', function (): v
         ->expectsOutputToContain('BALANCED 0.52, attacking 0.21 | press 0.09 | concern 1/5')
         ->assertSuccessful();
 
-    Http::assertSent(fn (Request $request): bool => $request['model'] === 'd3:2b' && $request['state']['my_team'] === 'Penybont');
+    Http::assertSent(fn (Request $request): bool => ($request->data()['model'] ?? null) === 'd3:2b' && ($request->data()['state'] ?? null)['my_team'] === 'Penybont');
 });
 
 it('can name a different model', function (): void {
@@ -66,7 +66,7 @@ it('can name a different model', function (): void {
         ->expectsOutputToContain('System One (d3:4b)')
         ->assertSuccessful();
 
-    Http::assertSent(fn (Request $request): bool => $request['model'] === 'd3:4b');
+    Http::assertSent(fn (Request $request): bool => ($request->data()['model'] ?? null) === 'd3:4b');
 });
 
 it('marks decisions where the model fell back to the bot', function (): void {

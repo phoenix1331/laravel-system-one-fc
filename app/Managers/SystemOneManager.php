@@ -32,6 +32,8 @@ final readonly class SystemOneManager implements Manager
 
     public function decide(DecisionContext $context): Decision
     {
+        $this->client->warmUp();
+
         try {
             return $this->toDecision($this->client->ask($context->toModelState(), $this->questions));
         } catch (SystemOneException $e) {
@@ -49,6 +51,11 @@ final readonly class SystemOneManager implements Manager
     public function model(): string
     {
         return $this->client->model();
+    }
+
+    public function withModel(string $model): self
+    {
+        return new self($this->client->withModel($model), $this->questions, $this->logger, $this->fallback);
     }
 
     /**

@@ -40,9 +40,9 @@ it('sends the match state from its own perspective with every question', functio
 
     app(SystemOneManager::class)->decide(losingLate());
 
-    Http::assertSent(fn (Request $request): bool => $request['state'] === losingLate()->toModelState()
-        && $request['state']['score'] === ['us' => 0, 'them' => 1]
-        && array_keys($request['questions']) === ['mentality', 'press_high', 'concern']);
+    Http::assertSent(fn (Request $request): bool => ($request->data()['state'] ?? null) === losingLate()->toModelState()
+        && ($request->data()['state'] ?? null)['score'] === ['us' => 0, 'them' => 1]
+        && array_keys(($request->data()['questions'] ?? null)) === ['mentality', 'press_high', 'concern']);
 });
 
 it('maps the answers to a decision with probabilities and concern', function (): void {
