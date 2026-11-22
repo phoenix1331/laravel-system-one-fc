@@ -85,6 +85,24 @@
     :focus-visible {
         @apply outline-2 outline-offset-2 outline-you;
     }
+
+    /* Tailwind 4 leaves buttons with the default cursor; everything clickable gets the hand. */
+    a[href],
+    button,
+    select,
+    summary,
+    label[for],
+    [role='button'],
+    [role='switch'],
+    [wire\:click] {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    select:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
 }
 
 @layer components {
