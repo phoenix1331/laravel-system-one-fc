@@ -44,6 +44,8 @@ No Docker, FrankenPHP or Herd: the brief targets a plain laptop setup anyone can
 | Engine free of Laravel | Easy to read, unit test and replay from a seed |
 | Livewire 4 | Current major at install time; the brief's Livewire 3 patterns still apply |
 | Model class `Game`, not `Match` | `match` is a PHP keyword |
+| Pint (`declare_strict_types`), Larastan level 6, Husky hooks | Style, static analysis and commit format enforced locally and in CI |
+| Laravel Boost MCP runs `php artisan boost:mcp` on the host | No container to exec into |
 
 ## Gotchas
 
