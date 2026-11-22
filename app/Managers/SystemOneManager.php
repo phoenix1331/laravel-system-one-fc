@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Managers;
 
 use App\Engine\Mentality;
+use App\Engine\Substitution;
 use App\SystemOne\Answers;
 use App\SystemOne\SystemOneClient;
 use App\SystemOne\SystemOneException;
@@ -35,7 +36,7 @@ final readonly class SystemOneManager implements Manager
         $this->client->warmUp();
 
         try {
-            return $this->toDecision($this->client->ask($context->toModelState(), $this->questions));
+            return $this->toDecision($this->client->ask($context->toModelState(), $this->questionsFor($context)));
         } catch (SystemOneException $e) {
             $this->logger->warning('System One manager fell back to the rule-based manager.', [
                 'minute' => $context->clock,
@@ -67,18 +68,43 @@ final readonly class SystemOneManager implements Manager
             ?? throw new SystemOneException('The model chose a mentality that does not exist.');
 
         $pressYes = $answers->noul('press_high');
+        $probabilities = [
+            'mentality' => $answers->probabilities('mentality'),
+            'press_high' => ['true' => $pressYes, 'false' => 1 - $pressYes],
+            'concern' => $answers->probabilities('concern'),
+        ];
+        $substitution = null;
+
+        if ($answers->has('substitution')) {
+            $substitution = Substitution::tryFrom($answers->choice('substitution'))
+                ?? throw new SystemOneException('The model chose a substitution that does not exist.');
+            $probabilities['substitution'] = $answers->probabilities('substitution');
+        }
 
         return new Decision(
             mentality: $mentality,
             pressHigh: $pressYes >= 0.5,
-            probabilities: [
-                'mentality' => $answers->probabilities('mentality'),
-                'press_high' => ['true' => $pressYes, 'false' => 1 - $pressYes],
-                'concern' => $answers->probabilities('concern'),
-            ],
+            substitution: $substitution === Substitution::None ? null : $substitution,
+            probabilities: $probabilities,
             concern: $this->concernLevel($answers->score('concern')),
             responseMs: $answers->responseMs,
         );
+    }
+
+    /**
+     * Every configured question, except substitutions once all three are used.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function questionsFor(DecisionContext $context): array
+    {
+        $questions = $this->questions;
+
+        if ($context->subsLeft === 0) {
+            unset($questions['substitution']);
+        }
+
+        return $questions;
     }
 
     /**

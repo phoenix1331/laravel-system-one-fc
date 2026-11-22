@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Engine\Mentality;
 use App\Engine\Phase;
+use App\Engine\Substitution;
 use App\Enums\Dugout;
 use App\Enums\GameStatus;
 use App\Games\GameRunner;
@@ -229,4 +230,15 @@ it('has a factory for finished games', function (): void {
 
     expect($game->isFinished())->toBeTrue()
         ->and($game->human_score)->toBe(2);
+});
+
+it('applies substitutions on resume and logs them even without a tactical change', function (): void {
+    $game = startGame();
+
+    decideBoth($game, new Decision(Mentality::Balanced, substitution: Substitution::FreshLegs));
+    $state = $game->refresh()->state();
+
+    expect($state->home->substitutionsUsed)->toBe(1)
+        ->and($game->events()->where('type', GameEvent::DECISION)->pluck('commentary')->all())
+        ->toBe(['Bala Town go Balanced and hold their shape, bringing on fresh legs.']);
 });

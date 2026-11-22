@@ -27,7 +27,7 @@ it('sends the model, the JSON state and every configured question in one request
             && $request->method() === 'POST'
             && $body['model'] === 'd3:2b'
             && $body['state'] === $state
-            && array_keys($body['questions']) === ['mentality', 'press_high', 'concern'];
+            && array_keys($body['questions']) === ['mentality', 'press_high', 'substitution', 'concern'];
     });
 });
 

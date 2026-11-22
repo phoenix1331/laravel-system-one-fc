@@ -47,6 +47,18 @@ return [
             ],
         ],
 
+        // Only asked while the team has substitutions left (3 per match).
+        'substitution' => [
+            'type' => 'choice',
+            'instructions' => 'my_team has subs_left substitutions left for the whole match. Should my_team make a substitution now? Most of the time the right answer is none; save substitutions for when tiredness or the score calls for one.',
+            'criteria' => [
+                'none' => 'Make no change and keep the substitutions for later',
+                'fresh_legs' => 'Replace tired players with fresh ones when fitness has dropped low, restoring energy',
+                'extra_striker' => 'Bring on an extra striker when a goal is needed late on, adding attack but weakening the defence',
+                'extra_defender' => 'Bring on an extra defender to protect a lead late on, adding defence but blunting the attack',
+            ],
+        ],
+
         // Display only: shown in the decision log, never used by the engine.
         'concern' => [
             'type' => 'score',

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Engine\Mentality;
+use App\Engine\Substitution;
 use App\Enums\Dugout;
 use App\Enums\GameStatus;
 use App\Games\GameRunner;
@@ -161,4 +162,14 @@ it('starts a rematch with the same clubs and model but a new seed', function ():
         ->and($rematch->human_team_id)->toBe($game->human_team_id)
         ->and($rematch->model_team_id)->toBe($game->model_team_id)
         ->and($rematch->model)->toBe($game->model);
+});
+
+it('lists the substitutions each side made', function (): void {
+    $game = finishedGame();
+    logDecision($game, 1, new Decision(Mentality::Balanced, substitution: Substitution::FreshLegs), new Decision(Mentality::Attacking, substitution: Substitution::ExtraStriker));
+
+    $this->get(route('games.result', $game))
+        ->assertSee('Subs')
+        ->assertSee('Fresh legs')
+        ->assertSee('Extra striker');
 });

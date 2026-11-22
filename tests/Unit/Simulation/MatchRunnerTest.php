@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Engine\Mentality;
 use App\Engine\Side;
+use App\Engine\Substitution;
 use App\Managers\Decision;
 use App\Managers\DecisionContext;
 use App\Managers\Manager;
@@ -34,7 +35,7 @@ it('asks both managers at every decision point and applies their tactics', funct
     $home = new FixedManager(new Decision(Mentality::Attacking, true));
     $away = new FixedManager(new Decision(Mentality::Defensive));
 
-    $state = (new MatchRunner($engine))->play($engine->kickOff(evenTeam('Home'), evenTeam('Away')), $home, $away);
+    $state = (new MatchRunner($engine, engineConfig()))->play($engine->kickOff(evenTeam('Home'), evenTeam('Away')), $home, $away);
 
     expect($state->isFinished())->toBeTrue()
         ->and($home->asked)->toHaveCount(6)
@@ -51,7 +52,7 @@ it('reports every step and every decision through the callbacks', function (): v
     $steps = 0;
     $decisions = [];
 
-    (new MatchRunner($engine))->play(
+    (new MatchRunner($engine, engineConfig()))->play(
         $engine->kickOff(evenTeam(), evenTeam()),
         new RuleBasedManager,
         new RuleBasedManager,
@@ -68,4 +69,15 @@ it('reports every step and every decision through the callbacks', function (): v
         ->and($decisions[0])->toBe(Side::Home)
         ->and($decisions[1])->toBe(Side::Away)
         ->and(count($decisions) % 2)->toBe(0);
+});
+
+it('applies substitutions and stops at three', function (): void {
+    $engine = seededEngine(4);
+    $home = new FixedManager(new Decision(Mentality::Balanced, substitution: Substitution::ExtraStriker));
+
+    $state = (new MatchRunner($engine, engineConfig()))->play($engine->kickOff(evenTeam(), evenTeam()), $home, new RuleBasedManager);
+
+    expect($state->home->substitutionsUsed)->toBe(3)
+        ->and($state->home->attackBonus)->toBe(24)
+        ->and($home->asked[3]->subsLeft)->toBe(0);
 });

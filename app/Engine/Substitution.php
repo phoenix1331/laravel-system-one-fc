@@ -20,4 +20,17 @@ enum Substitution: string
             self::ExtraDefender => 'Extra defender',
         };
     }
+
+    /**
+     * How the commentary describes it, e.g. "bringing on an extra striker".
+     */
+    public function commentary(): string
+    {
+        return match ($this) {
+            self::None => 'with no changes',
+            self::FreshLegs => 'bringing on fresh legs',
+            self::ExtraStriker => 'bringing on an extra striker',
+            self::ExtraDefender => 'bringing on an extra defender',
+        };
+    }
 }

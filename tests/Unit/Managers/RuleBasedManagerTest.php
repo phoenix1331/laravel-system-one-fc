@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Engine\Mentality;
+use App\Engine\Substitution;
 use App\Engine\Tactics;
 use App\Managers\DecisionContext;
 use App\Managers\RuleBasedManager;
@@ -62,4 +63,24 @@ it('leaves the model-only fields empty', function (): void {
         ->and($decision->concern)->toBeNull()
         ->and($decision->substitution)->toBeNull()
         ->and($decision->fallbackUsed)->toBeFalse();
+});
+
+it('makes substitutions when the game calls for them', function (int $minute, int $for, int $against, int $fitness, ?Substitution $expected): void {
+    expect((new RuleBasedManager)->decide(contextAt($minute, $for, $against, $fitness))->substitution)->toBe($expected);
+})->with([
+    'chasing late' => [72, 0, 1, 70, Substitution::ExtraStriker],
+    'protecting a one-goal lead' => [78, 1, 0, 70, Substitution::ExtraDefender],
+    'tired after the hour' => [60, 1, 1, 45, Substitution::FreshLegs],
+    'tired but early' => [40, 1, 1, 45, null],
+    'nothing to change' => [60, 1, 1, 70, null],
+]);
+
+it('makes no substitution with none left', function (): void {
+    $context = new DecisionContext(
+        minute: 80, clock: "80'", isHalfTime: false, myTeam: 'A', opponent: 'B', goalsFor: 0, goalsAgainst: 1,
+        possessionLast15: 50, shotsLast15For: 1, shotsLast15Against: 1, fitness: 40, opponentFitness: 50,
+        tactics: new Tactics, subsLeft: 0,
+    );
+
+    expect((new RuleBasedManager)->decide($context)->substitution)->toBeNull();
 });

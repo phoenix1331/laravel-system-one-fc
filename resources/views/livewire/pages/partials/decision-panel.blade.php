@@ -32,6 +32,15 @@
             @endforeach
         </fieldset>
 
+        <div class="flex flex-col gap-3">
+            <label for="substitution" class="label">Substitution · {{ $subsLeft }} of 3 left</label>
+            <select id="substitution" wire:model="substitution" class="field" @disabled($subsLeft === 0)>
+                @foreach ($substitutions as $option)
+                    <option value="{{ $option->value }}" wire:key="sub-{{ $option->value }}">{{ $option->label() }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="panel flex items-center justify-between gap-4 p-5">
             <div>
                 <p id="press-label" class="font-semibold">Press high</p>

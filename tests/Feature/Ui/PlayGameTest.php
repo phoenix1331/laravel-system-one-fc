@@ -247,3 +247,27 @@ it('labels each stretch of the match', function (): void {
 
     expect(array_values(array_unique($labels)))->toContain("15'", "30'", 'half time', "60'", "75'", 'full time');
 });
+
+it('lets the player make a substitution and shows it in the reveal', function (): void {
+    Http::fake(['*' => Http::response(modelReply('balanced'))]);
+    $game = kickOff();
+
+    Livewire::test(PlayGame::class, ['game' => $game])
+        ->assertSee('Substitution · 3 of 3 left')
+        ->set('substitution', 'fresh_legs')
+        ->call('lockIn')
+        ->assertSee('Sub: Fresh legs')
+        ->call('resume')
+        ->assertSet('substitution', 'none');
+
+    expect($game->refresh()->state()->home->substitutionsUsed)->toBe(1);
+});
+
+it('rejects a substitution that does not exist', function (): void {
+    Queue::fake();
+
+    Livewire::test(PlayGame::class, ['game' => kickOff()])
+        ->set('substitution', 'goalkeeper_up_front')
+        ->call('lockIn')
+        ->assertHasErrors(['substitution']);
+});

@@ -7,6 +7,7 @@ use App\Engine\MatchEvent;
 use App\Engine\MatchState;
 use App\Engine\Mentality;
 use App\Engine\Side;
+use App\Engine\Substitution;
 use App\Managers\Decision;
 use App\Simulation\Commentator;
 
@@ -51,4 +52,12 @@ it('describes a tactical change', function (): void {
         ->toBe('Bala Town go Attacking and press high.')
         ->and($commentator->describeDecision(Side::Away, new Decision(Mentality::ParkTheBus), commentaryMatch()))
         ->toBe('Penybont go Park the bus and hold their shape.');
+});
+
+it('mentions a substitution in a tactical change', function (): void {
+    expect((new Commentator)->describeDecision(Side::Home, new Decision(Mentality::AllOutAttack, substitution: Substitution::ExtraStriker), commentaryMatch()))
+        ->toBe('Bala Town go All out attack and hold their shape, bringing on an extra striker.')
+        ->and(Substitution::None->commentary())->toBe('with no changes')
+        ->and(Substitution::FreshLegs->commentary())->toBe('bringing on fresh legs')
+        ->and(Substitution::ExtraDefender->commentary())->toBe('bringing on an extra defender');
 });

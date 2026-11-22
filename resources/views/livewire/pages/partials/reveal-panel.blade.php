@@ -20,6 +20,9 @@
                 <span class="text-sm text-you-text">You</span>
                 <span class="font-display text-xl font-bold">{{ $you->mentality->label() }}</span>
                 <span class="text-sm text-muted">{{ $you->press_high ? 'Pressing high' : 'Holding shape' }}</span>
+                @if ($you->substitution)
+                    <span class="text-sm text-muted">Sub: {{ $you->substitution->label() }}</span>
+                @endif
             </div>
             <div @class(['panel flex flex-col gap-1 p-5', 'outline-2 outline-dashed outline-line-strong' => $s1->fallback_used])>
                 <span class="text-sm text-s1-text">System One</span>
@@ -30,6 +33,9 @@
                         · <span class="font-mono">{{ number_format($s1->probabilities['press_high']['true'], 2) }}</span>
                     @endif
                 </span>
+                @if ($s1->substitution)
+                    <span class="text-sm text-muted">Sub: {{ $s1->substitution->label() }}</span>
+                @endif
             </div>
         </div>
 

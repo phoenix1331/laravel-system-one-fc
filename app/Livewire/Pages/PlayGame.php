@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\Pages;
 
+use App\Engine\EngineConfig;
 use App\Engine\MatchState;
 use App\Engine\Mentality;
 use App\Engine\Phase;
 use App\Engine\Side;
+use App\Engine\Substitution;
 use App\Enums\Dugout;
 use App\Enums\GameStatus;
 use App\Games\GameRunner;
@@ -41,6 +43,8 @@ class PlayGame extends Component
 
     public bool $pressHigh = false;
 
+    public string $substitution = 'none';
+
     public function mount(): void
     {
         $this->resetPanelToCurrentTactics();
@@ -64,13 +68,19 @@ class PlayGame extends Component
         $this->validate([
             'mentality' => ['required', Rule::enum(Mentality::class)],
             'pressHigh' => ['boolean'],
+            'substitution' => ['required', Rule::enum(Substitution::class)],
         ]);
 
         if (! $this->game->isDeciding()) {
             return;
         }
 
-        $manager = new HumanManager(Mentality::from($this->mentality), $this->pressHigh);
+        $substitution = Substitution::from($this->substitution);
+        $manager = new HumanManager(
+            Mentality::from($this->mentality),
+            $this->pressHigh,
+            $substitution === Substitution::None ? null : $substitution,
+        );
         $decision = $manager->decide($runner->contextFor($this->game, Dugout::Human));
 
         $runner->recordDecision($this->game, Dugout::Human, $decision, HumanManager::class);
@@ -148,6 +158,8 @@ class PlayGame extends Component
             'goals' => $this->goalMarkers(),
             'possession' => $this->possession($state),
             'mentalities' => Mentality::cases(),
+            'substitutions' => Substitution::cases(),
+            'subsLeft' => $state->home->substitutionsLeft(app(EngineConfig::class)),
         ])
             ->title("{$this->game->humanTeam->name} v {$this->game->modelTeam->name}")
             ->layoutData(['context' => "Cymru Premier · friendly · model {$this->game->model}"]);
@@ -164,6 +176,7 @@ class PlayGame extends Component
         $tactics = $this->game->state()->home->tactics;
         $this->mentality = $tactics->mentality->value;
         $this->pressHigh = $tactics->pressHigh;
+        $this->substitution = Substitution::None->value;
     }
 
     private function halfLabel(MatchState $state): string

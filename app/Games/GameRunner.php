@@ -170,7 +170,9 @@ final readonly class GameRunner
             $team = $state->team($row->side->side());
             $decision = $row->toDecision();
 
-            if ($decision->tactics() != $team->tactics) {
+            $substituted = $decision->substitution !== null && $team->substitute($decision->substitution, $this->config);
+
+            if ($substituted || $decision->tactics() != $team->tactics) {
                 $game->events()->create([
                     'minute' => $row->minute,
                     'type' => GameEvent::DECISION,

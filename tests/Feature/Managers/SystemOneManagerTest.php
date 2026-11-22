@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Engine\Mentality;
+use App\Engine\Substitution;
 use App\Engine\Tactics;
 use App\Managers\DecisionContext;
 use App\Managers\SystemOneManager;
@@ -42,7 +43,7 @@ it('sends the match state from its own perspective with every question', functio
 
     Http::assertSent(fn (Request $request): bool => ($request->data()['state'] ?? null) === losingLate()->toModelState()
         && ($request->data()['state'] ?? null)['score'] === ['us' => 0, 'them' => 1]
-        && array_keys(($request->data()['questions'] ?? null)) === ['mentality', 'press_high', 'concern']);
+        && array_keys(($request->data()['questions'] ?? null)) === ['mentality', 'press_high', 'substitution', 'concern']);
 });
 
 it('maps the answers to a decision with probabilities and concern', function (): void {
@@ -116,4 +117,35 @@ it('falls back on a response that is not JSON', function (): void {
 
     expect(app(SystemOneManager::class)->decide(losingLate())->fallbackUsed)->toBeTrue()
         ->and(app(SystemOneManager::class)->model())->toBe('d3:2b');
+});
+
+it('maps the substitution answer and keeps its probabilities', function (): void {
+    Http::fake(['*' => Http::response(modelAnswers(['substitution' => ['choice' => 'extra_striker']]))]);
+
+    $decision = app(SystemOneManager::class)->decide(losingLate());
+
+    expect($decision->substitution)->toBe(Substitution::ExtraStriker)
+        ->and($decision->probabilities['substitution']['none'])->toEqualWithDelta(0.82, 0.0001);
+});
+
+it('treats a "none" substitution as no change', function (): void {
+    Http::fake(['*' => Http::response(modelAnswers())]);
+
+    expect(app(SystemOneManager::class)->decide(losingLate())->substitution)->toBeNull();
+});
+
+it('stops asking about substitutions once all three are used', function (): void {
+    Http::fake(['*' => Http::response(modelAnswers())]);
+    $context = losingLate();
+    $noSubsLeft = new DecisionContext(...[...get_object_vars($context), 'subsLeft' => 0]);
+
+    app(SystemOneManager::class)->decide($noSubsLeft);
+
+    Http::assertSent(fn (Request $request): bool => array_keys($request->data()['questions'] ?? []) === ['mentality', 'press_high', 'concern']);
+});
+
+it('falls back on a substitution that does not exist', function (): void {
+    Http::fake(['*' => Http::response(modelAnswers(['substitution' => ['choice' => 'goalkeeper_up_front']]))]);
+
+    expect(app(SystemOneManager::class)->decide(losingLate())->fallbackUsed)->toBeTrue();
 });

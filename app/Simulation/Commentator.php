@@ -8,6 +8,7 @@ use App\Engine\EventType;
 use App\Engine\MatchEvent;
 use App\Engine\MatchState;
 use App\Engine\Side;
+use App\Engine\Substitution;
 use App\Managers\Decision;
 
 /**
@@ -72,7 +73,10 @@ final class Commentator
     public function describeDecision(Side $side, Decision $decision, MatchState $state): string
     {
         $press = $decision->pressHigh ? 'and press high' : 'and hold their shape';
+        $change = $decision->substitution !== null && $decision->substitution !== Substitution::None
+            ? ", {$decision->substitution->commentary()}"
+            : '';
 
-        return "{$state->team($side)->name} go {$decision->mentality->label()} {$press}.";
+        return "{$state->team($side)->name} go {$decision->mentality->label()} {$press}{$change}.";
     }
 }

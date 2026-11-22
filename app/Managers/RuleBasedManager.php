@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Managers;
 
 use App\Engine\Mentality;
+use App\Engine\Substitution;
 
 /**
  * A manager made of a few fixed rules of thumb.
@@ -19,6 +20,7 @@ final class RuleBasedManager implements Manager
         return new Decision(
             mentality: $this->mentality($context),
             pressHigh: $this->shouldPress($context),
+            substitution: $this->substitution($context),
         );
     }
 
@@ -46,6 +48,22 @@ final class RuleBasedManager implements Manager
         }
 
         return Mentality::Balanced;
+    }
+
+    /**
+     * Change personnel when the game calls for it: legs when tired, a striker when chasing, a defender when protecting.
+     */
+    private function substitution(DecisionContext $context): ?Substitution
+    {
+        $difference = $context->goalDifference();
+
+        return match (true) {
+            $context->subsLeft === 0 => null,
+            $difference < 0 && $context->minute >= 70 => Substitution::ExtraStriker,
+            $difference === 1 && $context->minute >= 75 => Substitution::ExtraDefender,
+            $context->fitness < 50 && $context->minute >= 55 => Substitution::FreshLegs,
+            default => null,
+        };
     }
 
     /**

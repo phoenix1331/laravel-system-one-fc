@@ -38,6 +38,6 @@ final readonly class EngineFactory
 
     public function runner(int $seed): MatchRunner
     {
-        return new MatchRunner($this->forSeed($seed), maxSubstitutions: $this->config->maxSubstitutions);
+        return new MatchRunner($this->forSeed($seed), $this->config);
     }
 }

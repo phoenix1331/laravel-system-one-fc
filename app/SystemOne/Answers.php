@@ -21,6 +21,11 @@ final readonly class Answers
         public int $responseMs,
     ) {}
 
+    public function has(string $id): bool
+    {
+        return isset($this->answers[$id]);
+    }
+
     /**
      * The winning option of a choice question.
      */

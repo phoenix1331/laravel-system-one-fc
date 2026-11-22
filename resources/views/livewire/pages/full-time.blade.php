@@ -60,13 +60,14 @@
         </div>
 
         <div class="mt-6 overflow-x-auto">
-            <table class="w-full min-w-[760px] text-left">
+            <table class="w-full min-w-[860px] text-left">
                 <thead class="text-sm text-muted">
                     <tr class="border-b border-surface2">
                         <th scope="col" class="py-3 pr-4 font-medium">Min</th>
                         <th scope="col" class="py-3 pr-4 font-medium">Score</th>
                         <th scope="col" class="py-3 pr-4 font-medium">You</th>
                         <th scope="col" class="py-3 pr-4 font-medium">System One</th>
+                        <th scope="col" class="py-3 pr-4 font-medium">Subs</th>
                         <th scope="col" class="py-3 pr-4 font-medium">Confidence</th>
                         <th scope="col" class="py-3 font-medium">Concern</th>
                     </tr>
@@ -81,6 +82,17 @@
                                 <span @class(['font-semibold', 'rounded-md border border-dashed border-muted px-2 py-1' => $row['model']->fallback_used])>
                                     {{ $row['model']->mentality->label() }}
                                 </span>
+                            </td>
+                            <td class="py-4 pr-4 text-sm">
+                                @if ($row['you']?->substitution)
+                                    <span class="block text-you-text">{{ $row['you']->substitution->label() }}</span>
+                                @endif
+                                @if ($row['model']->substitution)
+                                    <span class="block text-s1-text">{{ $row['model']->substitution->label() }}</span>
+                                @endif
+                                @if (! $row['you']?->substitution && ! $row['model']->substitution)
+                                    <span class="text-muted">-</span>
+                                @endif
                             </td>
                             <td class="py-4 pr-4">
                                 <div class="grid grid-cols-[1fr_44px] items-center gap-3">
@@ -105,7 +117,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="py-6 text-muted">No decisions were recorded.</td></tr>
+                        <tr><td colspan="7" class="py-6 text-muted">No decisions were recorded.</td></tr>
                     @endforelse
                 </tbody>
             </table>

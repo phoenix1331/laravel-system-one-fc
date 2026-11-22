@@ -89,6 +89,43 @@ final class TeamState
         $this->fitness = max($config->fitnessFloor, $this->currentFitness() - $this->fitnessDrain($config));
     }
 
+    public function substitutionsLeft(EngineConfig $config): int
+    {
+        return max(0, $config->maxSubstitutions - $this->substitutionsUsed);
+    }
+
+    /**
+     * Make a substitution if one is left. Returns false when nothing changed.
+     *
+     * Fresh legs restores fitness; an extra striker or defender shifts the
+     * ratings for the rest of the match.
+     */
+    public function substitute(Substitution $substitution, EngineConfig $config): bool
+    {
+        if ($substitution === Substitution::None || $this->substitutionsLeft($config) === 0) {
+            return false;
+        }
+
+        match ($substitution) {
+            Substitution::FreshLegs => $this->fitness = min(100.0, $this->currentFitness() + $config->freshLegsFitness),
+            Substitution::ExtraStriker => $this->shiftRatings($config->extraStriker),
+            Substitution::ExtraDefender => $this->shiftRatings($config->extraDefender),
+        };
+
+        $this->substitutionsUsed++;
+
+        return true;
+    }
+
+    /**
+     * @param  array{attack: int, defence: int}  $change
+     */
+    private function shiftRatings(array $change): void
+    {
+        $this->attackBonus += $change['attack'];
+        $this->defenceBonus += $change['defence'];
+    }
+
     /**
      * @return TeamStateArray
      */

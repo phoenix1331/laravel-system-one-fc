@@ -88,3 +88,40 @@ it('never drains fitness below the floor', function (): void {
 
     expect($team->currentFitness())->toBe(20.0);
 });
+
+it('gives fresh legs fifteen fitness, capped at 100', function (float $before, float $after): void {
+    $team = new TeamState('Tired FC', new TeamRatings(60, 50, 40, 100), fitness: $before);
+
+    expect($team->substitute(Substitution::FreshLegs, engineConfig()))->toBeTrue()
+        ->and($team->currentFitness())->toBe($after)
+        ->and($team->substitutionsUsed)->toBe(1);
+})->with([[50.0, 65.0], [95.0, 100.0]]);
+
+it('shifts attack and defence for an extra striker or defender', function (): void {
+    $team = fullFitnessTeam();
+    $team->substitute(Substitution::ExtraStriker, engineConfig());
+
+    expect($team->effectiveRatings(engineConfig())->attack)->toEqualWithDelta(68.0, 0.0001)
+        ->and($team->effectiveRatings(engineConfig())->defence)->toEqualWithDelta(35.0, 0.0001);
+
+    $team->substitute(Substitution::ExtraDefender, engineConfig());
+
+    expect($team->attackBonus)->toBe(3)
+        ->and($team->defenceBonus)->toBe(3)
+        ->and($team->substitutionsLeft(engineConfig()))->toBe(1);
+});
+
+it('allows only three substitutions and ignores none', function (): void {
+    $team = fullFitnessTeam();
+
+    expect($team->substitute(Substitution::None, engineConfig()))->toBeFalse();
+
+    foreach (range(1, 3) as $sub) {
+        expect($team->substitute(Substitution::FreshLegs, engineConfig()))->toBeTrue();
+    }
+
+    expect($team->substitute(Substitution::ExtraStriker, engineConfig()))->toBeFalse()
+        ->and($team->substitutionsUsed)->toBe(3)
+        ->and($team->attackBonus)->toBe(0)
+        ->and($team->substitutionsLeft(engineConfig()))->toBe(0);
+});

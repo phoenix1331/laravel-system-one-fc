@@ -13,11 +13,31 @@
       },
       "confidence": 0.2404881520743114
     },
-    "press_high": { "type": "noul", "noul": 0.0867820511700006 },
+    "press_high": {
+      "type": "noul",
+      "noul": 0.0867820511700006
+    },
+    "substitution": {
+      "type": "choice",
+      "choice": "none",
+      "probabilities": {
+        "none": 0.82,
+        "fresh_legs": 0.1,
+        "extra_striker": 0.05,
+        "extra_defender": 0.03
+      },
+      "confidence": 0.6
+    },
     "concern": {
       "type": "score",
       "score": 0.16667522785511812,
-      "legend": { "0": "Calm", "1": "Slightly uneasy", "2": "Uneasy", "3": "Worried", "4": "Very worried" },
+      "legend": {
+        "0": "Calm",
+        "1": "Slightly uneasy",
+        "2": "Uneasy",
+        "3": "Worried",
+        "4": "Very worried"
+      },
       "probabilities": {
         "0": 0.8967606677928338,
         "1": 0.05527804534450165,
@@ -28,5 +48,8 @@
       "confidence": 0.7282383984532041
     }
   },
-  "usage": { "input_tokens": 711, "output_tokens": 0 }
+  "usage": {
+    "input_tokens": 711,
+    "output_tokens": 0
+  }
 }
