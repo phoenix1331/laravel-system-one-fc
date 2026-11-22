@@ -32,3 +32,91 @@ Content-Type: application/json
     }
   }
 }
+
+###
+
+# Choice question: answers.team.choice is the winner, probabilities covers every option
+POST {{ollamaUrl}}/v1/systemone
+Content-Type: application/json
+
+{
+  "model": "{{model}}",
+  "state": "My laptop will not turn on",
+  "questions": {
+    "team": {
+      "type": "choice",
+      "instructions": "Which team should handle this?",
+      "criteria": {
+        "billing": "Payments and refunds",
+        "technical": "Software and hardware problems",
+        "sales": "New purchases"
+      }
+    }
+  }
+}
+
+###
+
+# Score question: criteria is an array of 2 to 10 levels, answers come back zero-indexed
+POST {{ollamaUrl}}/v1/systemone
+Content-Type: application/json
+
+{
+  "model": "{{model}}",
+  "state": "The server room is on fire",
+  "questions": {
+    "urgency": {
+      "type": "score",
+      "instructions": "How urgent is this?",
+      "criteria": ["Routine", "Soon", "Immediate"]
+    }
+  }
+}
+
+###
+
+# A full decision point: JSON match state and all three question types in one request
+POST {{ollamaUrl}}/v1/systemone
+Content-Type: application/json
+
+{
+  "model": "{{model}}",
+  "state": {
+    "minute": 88,
+    "my_team": "Bala Town",
+    "opponent": "Penybont",
+    "score": { "us": 2, "them": 0 },
+    "possession_last_15": 38,
+    "shots_last_15": { "us": 1, "them": 5 },
+    "fitness": { "us": 61, "them": 74 },
+    "current_mentality": "balanced",
+    "pressing": false,
+    "subs_left": 2
+  },
+  "questions": {
+    "mentality": {
+      "type": "choice",
+      "instructions": "You manage my_team. Which mentality should the team play with now?",
+      "criteria": {
+        "park_the_bus": "All players defend deep; accept very few chances to protect the score",
+        "defensive": "Sit deeper and stay compact; counter-attack occasionally",
+        "balanced": "Even split between attack and defence",
+        "attacking": "Push players forward to create more chances, leaving some space behind",
+        "all_out_attack": "Throw everyone forward to chase a goal, leaving the defence exposed"
+      }
+    },
+    "press_high": {
+      "type": "noul",
+      "instructions": "Should the team press high?",
+      "criteria": {
+        "true": "Press high to win the ball back quickly, at the cost of tiring faster",
+        "false": "Hold shape and conserve energy"
+      }
+    },
+    "concern": {
+      "type": "score",
+      "instructions": "How worried should the manager be about the result?",
+      "criteria": ["Calm", "Slightly uneasy", "Uneasy", "Worried", "Very worried"]
+    }
+  }
+}

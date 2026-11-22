@@ -33,7 +33,7 @@ No Docker, FrankenPHP or Herd: the brief targets a plain laptop setup anyone can
 
 | Integration | Used for | Config |
 |-------------|----------|--------|
-| Ollama System One API | Model manager decisions | `OLLAMA_URL`, `SYSTEM_ONE_MODEL` (`d3:2b`, or `d3:4b` on 16 GB), `SYSTEM_ONE_TIMEOUT` (seconds) |
+| Ollama System One API | Model manager decisions; shapes in `docs/systemone-api.md` | `OLLAMA_URL`, `SYSTEM_ONE_MODEL` (`d3:2b`, or `d3:4b` on 16 GB), `SYSTEM_ONE_TIMEOUT` (seconds, default 30) |
 
 ## Decisions
 
@@ -51,4 +51,6 @@ No Docker, FrankenPHP or Herd: the brief targets a plain laptop setup anyone can
 
 - Tests must never need a live Ollama: use `Http::fake()`. Real-model checks only run with `RUN_OLLAMA_SCENARIOS=true`
 - Ollama on Windows, app in WSL: `localhost` only reaches Windows with WSL mirrored networking (`networkingMode=mirrored` in `.wslconfig`). Otherwise set `OLLAMA_HOST=0.0.0.0` on Windows and point `OLLAMA_URL` at the Windows host IP
+- `score` criteria is an array (2 to 10 levels, zero-indexed answers); `choice` criteria is an object. `confidence` is not the winning probability
+- `d3:2b` on CPU takes 11 to 12.5 s per warm decision request, which is why the timeout default is 30 s, not the brief's 10 s
 - WSL gets half the machine's RAM by default; `d3:4b` can be OOM-killed on 8 GB machines
