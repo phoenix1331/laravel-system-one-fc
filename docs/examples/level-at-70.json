@@ -1,0 +1,124 @@
+{
+    "request": {
+        "model": "d3:2b",
+        "state": {
+            "minute": 70,
+            "my_team": "Bala Town",
+            "opponent": "Penybont",
+            "score": {
+                "us": 1,
+                "them": 1
+            },
+            "possession_last_15": 47,
+            "shots_last_15": {
+                "us": 2,
+                "them": 3
+            },
+            "fitness": {
+                "us": 58,
+                "them": 63
+            },
+            "current_mentality": "balanced",
+            "pressing": false,
+            "subs_left": 3
+        },
+        "questions": {
+            "mentality": {
+                "type": "choice",
+                "instructions": "You manage my_team in a 90-minute football match. score.us is my_team's goals and score.them is the opponent's. A team that is behind late on needs goals and must take more risk; a team that is ahead late on should protect its lead; early on or when level, stay balanced. Which mentality should my_team play with now?",
+                "criteria": {
+                    "park_the_bus": "Everyone defends deep to protect a lead late in the match, accepting almost no chances",
+                    "defensive": "Sit deeper and stay compact to hold on to a lead, creating fewer chances but conceding fewer",
+                    "balanced": "An even split between attack and defence, the normal approach when the match is level or there is plenty of time left",
+                    "attacking": "Push extra players forward to create more chances when a goal is needed, leaving more space behind",
+                    "all_out_attack": "Throw everyone forward to chase a goal when losing near the end, leaving the defence badly exposed"
+                }
+            },
+            "press_high": {
+                "type": "noul",
+                "instructions": "Should my_team press high from now on? Pressing wins the ball back sooner but tires players faster, which hurts most when fitness is already low.",
+                "criteria": {
+                    "true": "Press high to win the ball back quickly, at the cost of tiring faster",
+                    "false": "Hold shape and conserve energy"
+                }
+            },
+            "substitution": {
+                "type": "choice",
+                "instructions": "my_team has subs_left substitutions left for the whole match. Should my_team make a substitution now? Most of the time the right answer is none; save substitutions for when tiredness or the score calls for one.",
+                "criteria": {
+                    "none": "Make no change and keep the substitutions for later",
+                    "fresh_legs": "Replace tired players with fresh ones when fitness has dropped low, restoring energy",
+                    "extra_striker": "Bring on an extra striker when a goal is needed late on, adding attack but weakening the defence",
+                    "extra_defender": "Bring on an extra defender to protect a lead late on, adding defence but blunting the attack"
+                }
+            },
+            "concern": {
+                "type": "score",
+                "instructions": "How worried should the manager of my_team be about the final result right now?",
+                "criteria": [
+                    "Calm: the result looks safe",
+                    "Slightly uneasy: things are mostly going to plan",
+                    "Uneasy: the result could go either way",
+                    "Worried: the result is slipping away",
+                    "Very worried: likely to lose unless something changes"
+                ]
+            }
+        }
+    },
+    "response": {
+        "model": "d3:2b",
+        "answers": {
+            "mentality": {
+                "type": "choice",
+                "choice": "balanced",
+                "probabilities": {
+                    "park_the_bus": 0.00209234178082928,
+                    "defensive": 0.014916197279002561,
+                    "balanced": 0.957081488267193,
+                    "attacking": 0.020871094451046634,
+                    "all_out_attack": 0.005038878221928486
+                },
+                "confidence": 0.8601767496353536
+            },
+            "press_high": {
+                "type": "noul",
+                "noul": 0.04663982098814182
+            },
+            "substitution": {
+                "type": "choice",
+                "choice": "none",
+                "probabilities": {
+                    "none": 0.7493202014328744,
+                    "fresh_legs": 0.21678028708417574,
+                    "extra_striker": 0.023041450567259304,
+                    "extra_defender": 0.010858060915690563
+                },
+                "confidence": 0.5068429820276334
+            },
+            "concern": {
+                "type": "score",
+                "score": 1.4765946559294105,
+                "legend": [
+                    "Calm: the result looks safe",
+                    "Slightly uneasy: things are mostly going to plan",
+                    "Uneasy: the result could go either way",
+                    "Worried: the result is slipping away",
+                    "Very worried: likely to lose unless something changes"
+                ],
+                "probabilities": [
+                    0.15386741042462387,
+                    0.275490354588772,
+                    0.5243011835241325,
+                    0.032862271557513034,
+                    0.01347877990495858
+                ],
+                "confidence": 0.28423861076462353
+            }
+        },
+        "usage": {
+            "input_tokens": 1183,
+            "output_tokens": 0
+        }
+    },
+    "ms": 20150
+}

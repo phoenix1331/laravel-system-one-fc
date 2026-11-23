@@ -1,0 +1,103 @@
+{
+    "request": {
+        "model": "d3:2b",
+        "state": {
+            "minute": 0,
+            "my_team": "Bala Town",
+            "opponent": "Penybont",
+            "score": {
+                "us": 0,
+                "them": 0
+            },
+            "possession_last_15": 50,
+            "shots_last_15": {
+                "us": 0,
+                "them": 0
+            },
+            "fitness": {
+                "us": 100,
+                "them": 100
+            },
+            "current_mentality": "balanced",
+            "pressing": false,
+            "subs_left": 3
+        },
+        "questions": {
+            "mentality": {
+                "type": "choice",
+                "instructions": "You manage my_team in a 90-minute football match. score.us is my_team's goals and score.them is the opponent's. A team that is behind late on needs goals and must take more risk; a team that is ahead late on should protect its lead; early on or when level, stay balanced. Which mentality should my_team play with now?",
+                "criteria": {
+                    "park_the_bus": "Everyone defends deep to protect a lead late in the match, accepting almost no chances",
+                    "defensive": "Sit deeper and stay compact to hold on to a lead, creating fewer chances but conceding fewer",
+                    "balanced": "An even split between attack and defence, the normal approach when the match is level or there is plenty of time left",
+                    "attacking": "Push extra players forward to create more chances when a goal is needed, leaving more space behind",
+                    "all_out_attack": "Throw everyone forward to chase a goal when losing near the end, leaving the defence badly exposed"
+                }
+            },
+            "press_high": {
+                "type": "noul",
+                "instructions": "Should my_team press high from now on? Pressing wins the ball back sooner but tires players faster, which hurts most when fitness is already low.",
+                "criteria": {
+                    "true": "Press high to win the ball back quickly, at the cost of tiring faster",
+                    "false": "Hold shape and conserve energy"
+                }
+            },
+            "concern": {
+                "type": "score",
+                "instructions": "How worried should the manager of my_team be about the final result right now?",
+                "criteria": [
+                    "Calm: the result looks safe",
+                    "Slightly uneasy: things are mostly going to plan",
+                    "Uneasy: the result could go either way",
+                    "Worried: the result is slipping away",
+                    "Very worried: likely to lose unless something changes"
+                ]
+            }
+        }
+    },
+    "response": {
+        "model": "d3:2b",
+        "answers": {
+            "mentality": {
+                "type": "choice",
+                "choice": "balanced",
+                "probabilities": {
+                    "park_the_bus": 0.0003733691763088863,
+                    "defensive": 0.0014420255301462702,
+                    "balanced": 0.9917974442715649,
+                    "attacking": 0.005045437792729288,
+                    "all_out_attack": 0.0013417232292505593
+                },
+                "confidence": 0.9651370902819821
+            },
+            "press_high": {
+                "type": "noul",
+                "noul": 0.05601254056570931
+            },
+            "concern": {
+                "type": "score",
+                "score": 1.0466363049393514,
+                "legend": [
+                    "Calm: the result looks safe",
+                    "Slightly uneasy: things are mostly going to plan",
+                    "Uneasy: the result could go either way",
+                    "Worried: the result is slipping away",
+                    "Very worried: likely to lose unless something changes"
+                ],
+                "probabilities": [
+                    0.44464442724341563,
+                    0.15211725987685928,
+                    0.3538691261161584,
+                    0.010695954224091487,
+                    0.03867323253947523
+                ],
+                "confidence": 0.26137986442466643
+            }
+        },
+        "usage": {
+            "input_tokens": 874,
+            "output_tokens": 0
+        }
+    },
+    "ms": 14536
+}

@@ -16,7 +16,7 @@ Most language models write text. A decision model like [d3](https://ollama.com/l
 | `choice` | named options with descriptions | the chosen option and a probability for each |
 | `score` | 2 to 10 ordered levels | the expected level and a probability for each |
 
-The name comes from Daniel Kahneman's **System 1**: fast, intuitive judgement as opposed to slow, deliberate reasoning. The model never explains itself. It just says how likely each answer is, which is exactly what a football manager needs from a quick look at the touchline. Ollama serves it at `/v1/systemone`, and every request and response shape used here is in [`docs/systemone-api.md`](docs/systemone-api.md).
+The name comes from Daniel Kahneman's **System 1**: fast, intuitive judgement as opposed to slow, deliberate reasoning. The model never explains itself. It just says how likely each answer is, which is exactly what a football manager needs from a quick look at the touchline. Ollama serves it at `/v1/systemone`, and every request and response shape used here is in [`docs/systemone-api.md`](docs/systemone-api.md). [`docs/index.html`](docs/index.html) shows the exact JSON the game sends and four real answers from `d3:2b`; turn on GitHub Pages from `/docs` to publish it.
 
 ## What this demonstrates
 
