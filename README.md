@@ -4,7 +4,7 @@
 
 Pick a Welsh club and manage it for 90 minutes against a manager run by a **decision model** on your own machine. Both of you make the same tactical calls at the same moments, without seeing each other's choice. At full time you see the result and every decision the model made, with the probabilities behind it. It's a Laravel 13 playground that shows how to use a decision model from PHP: you send typed questions and get probabilities back. There's no generated text, no API key and no cloud.
 
-<!-- GIF of a match goes here -->
+![A match against System One at 10': both decisions revealed, with the probability the model gave each mentality](docs/images/match.png)
 
 ## What is a System One model?
 
@@ -16,7 +16,7 @@ Most language models write text. A decision model like [d3](https://ollama.com/l
 | `choice` | named options with descriptions | the chosen option and a probability for each |
 | `score` | 2 to 10 ordered levels | the expected level and a probability for each |
 
-The name comes from Daniel Kahneman's **System 1**: fast, intuitive judgement as opposed to slow, deliberate reasoning. The model never explains itself. It just says how likely each answer is, which is exactly what a football manager needs from a quick look at the touchline. Ollama serves it at `/v1/systemone`, and every request and response shape used here is in [`docs/systemone-api.md`](docs/systemone-api.md). [`docs/index.html`](docs/index.html) shows the exact JSON the game sends and four real answers from `d3:2b`; turn on GitHub Pages from `/docs` to publish it.
+The name comes from Daniel Kahneman's **System 1**: fast, intuitive judgement as opposed to slow, deliberate reasoning. The model never explains itself. It just says how likely each answer is, which is exactly what a football manager needs from a quick look at the touchline. Ollama serves it at `/v1/systemone`, and every request and response shape used here is in [`docs/systemone-api.md`](docs/systemone-api.md). [`docs/index.html`](docs/index.html) shows the exact JSON the game sends and four real answers from `d3:2b`.
 
 ## What this demonstrates
 
@@ -67,16 +67,15 @@ Every constant is in `config/engine.php`. A calibration test plays 1,000 matches
 
 - PHP 8.4 with `pdo_mysql`, `pdo_sqlite` and `pcov`, plus Composer
 - Node.js and npm (run `npm install` once to activate the Husky git hooks)
-- MySQL 8 on `127.0.0.1:3306`, user `root`, password `secret` (or change the `DB_*` values in `.env`)
+- MySQL 8. `.env.example` points at `127.0.0.1:3306` as `root` / `secret`; change the `DB_*` values in `.env` to match your server
 - [Ollama](https://ollama.com) 0.40.9 or later, then `ollama pull d3:2b`
 - `osv-scanner` for the pre-commit audit: `go install github.com/google/osv-scanner/cmd/osv-scanner@latest`
-- For Claude Code's MCP servers: `gh auth login` (GitHub), and `MYSQL_HOST`/`MYSQL_PORT`/`MYSQL_USER`/`MYSQL_PASSWORD`/`MYSQL_DATABASE` exported to match your MySQL
+- Optional, for Claude Code's MCP servers: `gh auth login` (GitHub), and `MYSQL_HOST`/`MYSQL_PORT`/`MYSQL_USER`/`MYSQL_PASSWORD`/`MYSQL_DATABASE` exported to match your MySQL
 
 ### Run it
 
-1. `mysql -uroot -psecret -e 'CREATE DATABASE system_one_fc'`
-2. `make install` copies `.env.example` to `.env`, installs dependencies, migrates, seeds the clubs and builds assets
-3. `make dev` starts the server, queue worker and Vite
+1. `make install` copies `.env.example` to `.env`, installs dependencies, creates the database if it doesn't exist, migrates, seeds the clubs and builds assets
+2. `make dev` starts the server, queue worker and Vite
 
 Open http://localhost:8000 and pick a club. Run `make` to list every command, including:
 
@@ -87,17 +86,16 @@ Open http://localhost:8000 and pick a club. Run `make` to list every command, in
 | `make scenarios` | Runs the real-model sanity checks against your Ollama |
 | `make coverage` / `make analyse` / `make lint` | Tests with coverage, Larastan, Pint |
 
-### Ollama on Windows, app in WSL
+### Ollama somewhere else
 
-`localhost` only reaches Windows from WSL when mirrored networking is on (`networkingMode=mirrored` in `%UserProfile%\.wslconfig`). Otherwise set `OLLAMA_HOST=0.0.0.0` on Windows, restart Ollama, and point `OLLAMA_URL` at the Windows host IP (`ip route show default | awk '{print $3}'` from WSL).
+If Ollama runs on another machine, in a VM, or on the Windows side of WSL, point `OLLAMA_URL` at it and start Ollama with `OLLAMA_HOST=0.0.0.0` so it accepts connections from outside. The status dot next to "System One" on the match screen turns red when the app can't reach it.
 
 ## Running on 8 GB
 
 - Use `d3:2b`. `d3:4b` wants 16 GB.
-- Keep the context small: set `OLLAMA_CONTEXT_LENGTH=4096` for Ollama. A decision request is under 1,000 tokens.
-- WSL gets half the machine's RAM by default, which is why `d3:4b` can be killed for running out of memory there. Running Ollama natively on Windows avoids that.
+- Keep the context small: set `OLLAMA_CONTEXT_LENGTH=4096` for Ollama. A decision request is about 900 to 1,200 tokens.
 - On a CPU, `d3:2b` takes 11 to 30 seconds per decision, and longer once the machine starts swapping, so `SYSTEM_ONE_TIMEOUT` defaults to 60. Close memory-hungry apps while you play, and never run `make simulate` during a game: Ollama answers one request at a time, so both slow to a crawl.
-- The substitution question is only asked from 55' (`SYSTEM_ONE_SUBSTITUTIONS_FROM`), which keeps most requests about a quarter smaller. Ollama unloads idle models after five minutes; the manager reloads it with a tiny warm-up question before deciding, so a cold start doesn't eat the decision's own timeout.
+- The substitution question is only asked from 55' (`SYSTEM_ONE_SUBSTITUTIONS_FROM`), which keeps most requests about a quarter smaller. Ollama unloads idle models after five minutes; the manager reloads it with a tiny warm-up question before deciding, so a cold start doesn't eat the decision's own timeout. You never need to load the model by hand: the status dot is green when it's loaded and amber while it's asleep.
 
 ## Environment variables
 
