@@ -4,16 +4,22 @@
         <p class="font-mono text-sm tracking-[0.2em] text-muted">FULL TIME</p>
 
         <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <span class="flex items-center gap-3 font-display text-2xl font-bold sm:text-3xl">
-                <x-club-badge :name="$game->humanTeam->name" size="size-12 sm:size-16" />
-                {{ $game->humanTeam->name }}
+            <span class="flex flex-col items-center gap-2">
+                <span class="rounded-full bg-you-chip px-3 py-1 text-xs font-semibold text-you-text">You</span>
+                <span class="flex items-center gap-3 font-display text-2xl font-bold sm:text-3xl">
+                    <x-club-badge :name="$game->humanTeam->name" size="size-12 sm:size-16" />
+                    {{ $game->humanTeam->name }}
+                </span>
             </span>
             <span class="font-mono text-[clamp(56px,9vw,84px)] leading-none font-medium">
                 <span class="text-you">{{ $game->human_score }}</span><span class="mx-3 text-line-strong">-</span><span class="text-s1">{{ $game->model_score }}</span>
             </span>
-            <span class="flex items-center gap-3 font-display text-2xl font-bold sm:text-3xl">
-                {{ $game->modelTeam->name }}
-                <x-club-badge :name="$game->modelTeam->name" size="size-12 sm:size-16" />
+            <span class="flex flex-col items-center gap-2">
+                <span class="rounded-full bg-s1-chip px-3 py-1 text-xs font-semibold text-s1-text">System One · {{ $game->model }}</span>
+                <span class="flex items-center gap-3 font-display text-2xl font-bold sm:text-3xl">
+                    {{ $game->modelTeam->name }}
+                    <x-club-badge :name="$game->modelTeam->name" size="size-12 sm:size-16" />
+                </span>
             </span>
         </div>
 
@@ -71,8 +77,8 @@
                     <tr class="border-b border-surface2">
                         <th scope="col" class="py-3 pr-4 font-medium">Min</th>
                         <th scope="col" class="py-3 pr-4 font-medium">Score</th>
-                        <th scope="col" class="py-3 pr-4 font-medium">You</th>
-                        <th scope="col" class="py-3 pr-4 font-medium">System One</th>
+                        <th scope="col" class="py-3 pr-4 font-medium text-you-text">You · {{ $game->humanTeam->name }}</th>
+                        <th scope="col" class="py-3 pr-4 font-medium text-s1-text">System One · {{ $game->modelTeam->name }}</th>
                         <th scope="col" class="py-3 pr-4 font-medium">Subs</th>
                         <th scope="col" class="py-3 pr-4 font-medium">Confidence</th>
                         <th scope="col" class="py-3 font-medium">Concern</th>

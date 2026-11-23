@@ -175,3 +175,13 @@ it('lists the substitutions each side made', function (): void {
         ->assertSee('Fresh legs')
         ->assertSee('Extra striker');
 });
+
+it('labels which club the player managed and which System One did, with their badges', function (): void {
+    $game = finishedGame();
+
+    $this->get(route('games.result', $game))
+        ->assertOk()
+        ->assertSeeInOrder(['You', 'Bala Town', 'System One · d3:2b', 'Penybont'])
+        ->assertSee('You · Bala Town')
+        ->assertSee('System One · Penybont');
+});
