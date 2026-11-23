@@ -62,3 +62,16 @@ it('needs clubs to play with', function (): void {
         ->expectsOutputToContain('Seed the clubs first')
         ->assertFailed();
 });
+
+it('scores both seats alike when the bot plays both, and does not always hand System One the weaker club', function (): void {
+    $this->seed(TeamSeeder::class);
+    Http::fake(fn () => throw new ConnectionException('refused'));
+
+    // With the model unavailable both seats are played by the bot, so a fair draw scores both columns alike.
+    Artisan::call('fc:simulate', ['count' => 12, '--seed' => 3]);
+
+    preg_match('/Points \\(3 a win\\)\\s+\\| (\\d+)\\s+\\| (\\d+)/', Artisan::output(), $points);
+
+    expect((int) $points[1])->toBe((int) $points[2])
+        ->and((int) $points[1])->toBeGreaterThan(6);
+});

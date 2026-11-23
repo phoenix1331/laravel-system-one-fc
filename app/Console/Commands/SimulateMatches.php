@@ -11,6 +11,7 @@ use App\Managers\RuleBasedManager;
 use App\Managers\SystemOneManager;
 use App\Models\Team;
 use App\Simulation\EngineFactory;
+use App\Simulation\Tally;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -36,9 +37,8 @@ class SimulateMatches extends Command
 
         // Picks clubs and seeds; separate from each match's own Randomizer.
         $draw = new Randomizer(new Mt19937((int) $this->option('seed')));
-        $results = ['win' => 0, 'draw' => 0, 'loss' => 0];
-        $goalsFor = 0;
-        $goalsAgainst = 0;
+        $systemOne = new Tally;
+        $baseline = new Tally;
         $decisions = 0;
         $fallbacks = 0;
         $responseMs = [];
@@ -47,13 +47,14 @@ class SimulateMatches extends Command
         $bar = $this->output->createProgressBar($count);
 
         foreach (range(1, $count) as $match) {
-            $picked = $draw->pickArrayKeys($teams->all(), 2);
-            $bot = $teams[$picked[0]];
-            $systemOne = $teams[$picked[1]];
+            // pickArrayKeys keeps table order, which would always hand the bot the stronger club; shuffle the pair.
+            $picked = $draw->shuffleArray($draw->pickArrayKeys($teams->all(), 2));
+            $botClub = $teams[$picked[0]];
+            $systemOneClub = $teams[$picked[1]];
             $seed = $draw->getInt(1, 2_147_483_647);
 
             $state = $engines->runner($seed)->play(
-                $engines->forSeed($seed)->kickOff($bot->toTeamState(), $systemOne->toTeamState()),
+                $engines->forSeed($seed)->kickOff($botClub->toTeamState(), $systemOneClub->toTeamState()),
                 new RuleBasedManager,
                 $manager,
                 onDecision: function (Side $side, DecisionContext $context, Decision $decision) use (&$decisions, &$fallbacks, &$responseMs): void {
@@ -70,26 +71,29 @@ class SimulateMatches extends Command
                 },
             );
 
-            $goalsFor += $state->away->goals;
-            $goalsAgainst += $state->home->goals;
-            $results[match ($state->away->goals <=> $state->home->goals) {
-                1 => 'win',
-                0 => 'draw',
-                -1 => 'loss',
-            }]++;
+            $systemOne->add($state->away->goals, $state->home->goals);
+
+            // The same fixture and seed with the bot in System One's seat: the baseline to beat.
+            $replay = $engines->runner($seed)->play(
+                $engines->forSeed($seed)->kickOff($botClub->toTeamState(), $systemOneClub->toTeamState()),
+                new RuleBasedManager,
+                new RuleBasedManager,
+            );
+            $baseline->add($replay->away->goals, $replay->home->goals);
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine(2);
 
-        $this->table(['', 'System One'], [
-            ['Won / drawn / lost', "{$results['win']} / {$results['draw']} / {$results['loss']}"],
-            ['Goals for / against', "{$goalsFor} / {$goalsAgainst}"],
-            ['Goals per match', number_format(($goalsFor + $goalsAgainst) / $count, 2)],
-            ['Fallbacks', "{$fallbacks} of {$decisions} decisions"],
-            ['Average response', $responseMs === [] ? 'n/a' : number_format(array_sum($responseMs) / count($responseMs) / 1000, 1).'s'],
+        $this->table(['', 'System One', 'Bot in its seat'], [
+            ['Won / drawn / lost', $systemOne->record(), $baseline->record()],
+            ['Points (3 a win)', $systemOne->points(), $baseline->points()],
+            ['Goals for / against', $systemOne->goals(), $baseline->goals()],
+            ['Fallbacks', "{$fallbacks} of {$decisions} decisions", '-'],
+            ['Average response', $responseMs === [] ? 'n/a' : number_format(array_sum($responseMs) / count($responseMs) / 1000, 1).'s', '-'],
         ]);
+        $this->line('Same fixtures and seeds in both columns, so the difference is the manager.');
 
         return self::SUCCESS;
     }
