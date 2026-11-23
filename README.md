@@ -25,7 +25,7 @@ The name comes from Daniel Kahneman's **System 1**: fast, intuitive judgement as
 - **Graceful fallback**: if the model times out, errors or answers in a shape we don't understand, the rule-based bot decides and the decision log marks it. (`app/Managers/SystemOneManager.php`)
 - **A deterministic match engine**: pure PHP with no Laravel inside. Every random number comes from a seeded `Random\Randomizer`, so a seed replays a match exactly, even across web requests. (`app/Engine/`, `app/Games/GameRunner.php`)
 - **Prompt wording as configuration**: the question wording lives in config, and real-model scenario tests catch wording that makes the model behave badly. (`config/manager.php`, `tests/Scenarios/`)
-- **Thinking in the background**: the model decides in a queued job while you decide, so the page never waits on a 15 second model call. (`app/Jobs/DecideForSystemOne.php`)
+- **Thinking ahead**: the engine is deterministic between pauses, so as soon as play resumes the game plays ahead on throwaway copies to the next pause and asks the model about that exact moment. The answer is usually ready before play stops. (`app/Jobs/DecideForSystemOne.php`, `GameRunner::nextPause()`)
 
 ## How the game works
 
@@ -140,6 +140,27 @@ After that, 2-0 up at 88' leans defensive (+0.58) and 0-1 down at 80' leans atta
 
 Over these ten fixtures, `d3:2b` with no examples and no training manages exactly as well as a set of hand-written rules. That isn't a bad result for a model that only ever reads a JSON snapshot and a few sentences of instructions. Ten matches is a small sample, though, so run more (`make simulate ARGS="50"`), try `d3:4b`, or tune the wording and see whether the left column pulls ahead.
 
+### Why 16 seconds, and why you rarely wait for it
+
+A decision model generates no text, so all of the time goes on reading the request. On a CPU that grows in step with the number of tokens, at about 16 ms each. Timings for the same 70' request on `d3:2b`, CPU only:
+
+| Request | Time | Input tokens |
+|---------|------|--------------|
+| Model not loaded yet | 79.7 s | 1,183 |
+| All four questions | 19.5 s | 1,183 |
+| The same request again | 19.4 s | 1,183 |
+| Without `concern` | 15.6 s | 928 |
+| Mentality and press only | 10.0 s | 616 |
+| Mentality only | 5.9 s | 378 |
+
+Sending the same request twice is no faster, so caching doesn't help. Three things keep the wait off the screen instead:
+
+1. **The home page loads the model** while you pick a club, so kick-off doesn't pay for a cold start.
+2. **The model decides ahead.** When play resumes, the game finds the state it will pause at and asks the model straight away, 15 to 30 real seconds before you get there.
+3. **The substitution question waits until 55'**, which keeps early requests about a quarter smaller.
+
+To go faster still, drop the display-only `concern` question (about 20% quicker), trim the wording in `config/manager.php` (check with `make scenarios`), or run Ollama on a machine with a GPU, which answers far faster.
+
 An early version of the benchmark always gave the bot the stronger club, because the random pick kept the table's strongest-first order. The model looked hopeless: won 0, drew 1, lost 9. The bot in the same seat did no better. That bug is why the baseline column now exists.
 
 ## Architecture notes
@@ -148,7 +169,7 @@ An early version of the benchmark always gave the bot the stronger club, because
 
 **A game survives between requests.** The browser polls once per match minute. `GameRunner::tick()` locks the game row, rebuilds the match from its JSON state and the serialised `Randomizer`, plays one minute and saves both. Because the random state is saved rather than re-seeded, a stored game replays exactly from its seed. Locking the row stops two overlapping polls playing the same minute twice.
 
-**Both managers decide blind.** When play pauses, `DecideForSystemOne` is queued straight away, so the model thinks while you do. Its answer is stored but not shown until you lock in. Then both decisions are revealed side by side, and play resumes with both applied at once.
+**Both managers decide blind.** When play resumes, `DecideForSystemOne` is queued for the next pause, using the state `GameRunner::nextPause()` finds by playing ahead on copies of the match and its `Randomizer`. Tactics only change at pauses, so that state is exact. If the answer isn't in when play stops, a second job is queued, and a cache lock stops the two asking Ollama twice. Its answer is stored but not shown until you lock in. Then both decisions are revealed side by side, and play resumes with both applied at once.
 
 **Failure is part of the design.** A local model on a laptop will sometimes be slow or unavailable. The model never gets a second try: the rule-based bot steps in, the decision is flagged, and the decision log shows a dashed outline with "Model timed out, bot chose". The game always finishes.
 
