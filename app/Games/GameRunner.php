@@ -135,11 +135,12 @@ final readonly class GameRunner
     }
 
     /**
-     * The match from one dugout's side, as its manager sees it at a decision point.
+     * The match from one dugout's side, as its manager sees it at a decision point:
+     * the current one, or a pause found ahead of time with nextPause().
      */
-    public function contextFor(Game $game, Dugout $dugout): DecisionContext
+    public function contextFor(Game $game, Dugout $dugout, ?MatchState $atPause = null): DecisionContext
     {
-        return DecisionContext::fromMatch($game->state(), $dugout->side(), $this->config->maxSubstitutions);
+        return DecisionContext::fromMatch($atPause ?? $game->state(), $dugout->side(), $this->config->maxSubstitutions);
     }
 
     /**
@@ -151,23 +152,39 @@ final readonly class GameRunner
             throw new LogicException('This game is not waiting for a decision.');
         }
 
-        $state = $game->state();
+        return $this->storeDecision($game, $game->decision_point, $game->state(), $dugout, $decision, $manager);
+    }
 
-        return $game->decisions()->firstOrCreate(
-            ['decision_point' => $game->decision_point, 'side' => $dugout],
-            [
-                'minute' => $this->decisionMinute($state),
-                'score' => $this->scoreFor($state, $dugout),
-                'manager' => $manager,
-                'mentality' => $decision->mentality,
-                'press_high' => $decision->pressHigh,
-                'substitution' => $decision->substitution,
-                'concern' => $decision->concern,
-                'probabilities' => $decision->probabilities,
-                'fallback_used' => $decision->fallbackUsed,
-                'response_ms' => $decision->responseMs,
-            ],
-        );
+    /**
+     * Where the match will be when play next pauses, found by playing ahead on throwaway copies.
+     * Tactics only change at decision points, so this is exactly the state the managers will see.
+     * Null when the clock is stopped, or when full time comes first.
+     */
+    public function nextPause(Game $game): ?MatchState
+    {
+        if ($game->status !== GameStatus::InProgress) {
+            return null;
+        }
+
+        $state = $game->state();
+        $engine = $this->engine($this->loadRandomizer($game));
+
+        while (! $state->isFinished()) {
+            if ($this->decisionPoints->isDue($state, $engine->advance($state))) {
+                return $state;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Store a decision made ahead of time, for the decision point play is heading towards.
+     * It stays hidden like any other until that point is reached.
+     */
+    public function recordDecisionAhead(Game $game, MatchState $atPause, Dugout $dugout, Decision $decision, string $manager): GameDecision
+    {
+        return $this->storeDecision($game, $game->decision_point + 1, $atPause, $dugout, $decision, $manager);
     }
 
     public function bothDecided(Game $game): bool
@@ -210,10 +227,35 @@ final readonly class GameRunner
         $game->engine_state = $state->toArray();
         $game->status = GameStatus::InProgress;
         $game->save();
+
+        // Start on the next pause now, so the answer is ready, or nearly, when play stops.
+        DecideForSystemOne::dispatch($game->id, $game->decision_point + 1);
     }
 
     /**
-     * Pause play and ask System One straight away, so it is thinking while the player is.
+     * The score from this dugout's side and the clock, stored once per dugout and decision point.
+     */
+    private function storeDecision(Game $game, int $decisionPoint, MatchState $state, Dugout $dugout, Decision $decision, string $manager): GameDecision
+    {
+        return $game->decisions()->firstOrCreate(
+            ['decision_point' => $decisionPoint, 'side' => $dugout],
+            [
+                'minute' => $this->decisionMinute($state),
+                'score' => $this->scoreFor($state, $dugout),
+                'manager' => $manager,
+                'mentality' => $decision->mentality,
+                'press_high' => $decision->pressHigh,
+                'substitution' => $decision->substitution,
+                'concern' => $decision->concern,
+                'probabilities' => $decision->probabilities,
+                'fallback_used' => $decision->fallbackUsed,
+                'response_ms' => $decision->responseMs,
+            ],
+        );
+    }
+
+    /**
+     * Pause play and ask System One, unless it has already decided this point ahead of time.
      */
     private function openDecisionPoint(Game $game): void
     {
@@ -222,7 +264,9 @@ final readonly class GameRunner
             'decision_point' => $game->decision_point + 1,
         ]);
 
-        DecideForSystemOne::dispatch($game->id, $game->decision_point)->afterCommit();
+        if ($game->currentDecision(Dugout::Model) === null) {
+            DecideForSystemOne::dispatch($game->id, $game->decision_point)->afterCommit();
+        }
     }
 
     private function save(Game $game, MatchState $state, Randomizer $random): void

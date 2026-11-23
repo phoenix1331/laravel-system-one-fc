@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Queue;
+
+beforeEach(function (): void {
+    // The home page starts warming up the model in the background.
+    Queue::fake();
+});
+
 it('renders the layout with the logo, theme toggle and self-hosted assets', function (): void {
     $this->get(route('home'))
         ->assertOk()

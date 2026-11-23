@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\GameStatus;
+use App\Jobs\WarmUpSystemOne;
 use App\Livewire\Pages\Home;
 use App\Models\Game;
 use App\Models\Team;
@@ -133,4 +134,16 @@ it('refuses a model that is not on the list', function (): void {
         ->assertHasErrors(['model']);
 
     expect(Game::query()->count())->toBe(0);
+});
+
+it('starts loading the model while the player picks a club, and the new one when switched', function (): void {
+    config(['manager.model' => 'd3:2b']);
+
+    Livewire::test(Home::class)
+        ->set('model', 'd3:4b')
+        ->set('model', 'not-a-model');
+
+    Queue::assertPushed(WarmUpSystemOne::class, 2);
+    Queue::assertPushed(WarmUpSystemOne::class, fn (WarmUpSystemOne $job): bool => $job->model === 'd3:2b');
+    Queue::assertPushed(WarmUpSystemOne::class, fn (WarmUpSystemOne $job): bool => $job->model === 'd3:4b');
 });

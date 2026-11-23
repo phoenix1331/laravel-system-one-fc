@@ -70,7 +70,7 @@
 
             <div class="flex flex-col gap-3">
                 <label for="model" class="label">System One model</label>
-                <select id="model" wire:model="model" class="field">
+                <select id="model" wire:model.live="model" class="field">
                     @foreach ($this->models() as $value => $label)
                         <option value="{{ $value }}" wire:key="model-{{ $value }}">{{ $label }}</option>
                     @endforeach

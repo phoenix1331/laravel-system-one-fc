@@ -10,11 +10,14 @@ use App\Managers\SystemOneManager;
 use App\Models\Game;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Asks the System One manager for its decision in the background, so the page
- * stays responsive while the model thinks. The player sees "thinking..." until
- * this has stored a decision.
+ * stays responsive while the model thinks. It is queued twice per decision point:
+ * when play resumes, to decide ahead on the state play will pause at, and when
+ * play pauses, in case that answer is not in yet. The player sees "thinking..."
+ * until one of them has stored a decision.
  */
 class DecideForSystemOne implements ShouldQueue
 {
@@ -38,20 +41,37 @@ class DecideForSystemOne implements ShouldQueue
 
     public function handle(GameRunner $runner, SystemOneManager $manager): void
     {
+        // One model call per decision point, even if the ahead job is still thinking when play pauses.
+        Cache::lock("system-one:{$this->gameId}:{$this->decisionPoint}", $this->timeout())
+            ->get(fn () => $this->decide($runner, $manager));
+    }
+
+    private function decide(GameRunner $runner, SystemOneManager $manager): void
+    {
         $game = Game::query()->find($this->gameId);
 
-        // The game moved on or the model already answered: nothing to do.
-        if ($game === null || ! $game->isDeciding() || $game->decision_point !== $this->decisionPoint) {
-            return;
-        }
-
-        if ($game->currentDecision(Dugout::Model) !== null) {
+        if ($game === null || $game->decisionAt($this->decisionPoint, Dugout::Model) !== null) {
             return;
         }
 
         $manager = $manager->withModel($game->model);
-        $decision = $manager->decide($runner->contextFor($game, Dugout::Model));
 
-        $runner->recordDecision($game, Dugout::Model, $decision, SystemOneManager::class);
+        // Play has reached this decision point: decide on the match as it stands.
+        if ($game->isDeciding() && $game->decision_point === $this->decisionPoint) {
+            $decision = $manager->decide($runner->contextFor($game, Dugout::Model));
+            $runner->recordDecision($game, Dugout::Model, $decision, SystemOneManager::class);
+
+            return;
+        }
+
+        // Play is still heading there: decide on the state it will pause at.
+        $atPause = $game->decision_point + 1 === $this->decisionPoint ? $runner->nextPause($game) : null;
+
+        if ($atPause === null) {
+            return;
+        }
+
+        $decision = $manager->decide($runner->contextFor($game, Dugout::Model, $atPause));
+        $runner->recordDecisionAhead($game, $atPause, Dugout::Model, $decision, SystemOneManager::class);
     }
 }

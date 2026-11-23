@@ -98,8 +98,16 @@ class Game extends Model
      */
     public function currentDecision(Dugout $dugout): ?GameDecision
     {
+        return $this->decisionAt($this->decision_point, $dugout);
+    }
+
+    /**
+     * A dugout's decision for any decision point, including one System One made ahead of time.
+     */
+    public function decisionAt(int $decisionPoint, Dugout $dugout): ?GameDecision
+    {
         return $this->decisions()
-            ->where('decision_point', $this->decision_point)
+            ->where('decision_point', $decisionPoint)
             ->where('side', $dugout)
             ->first();
     }

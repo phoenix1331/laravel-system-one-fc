@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Pages;
 
 use App\Games\GameRunner;
+use App\Jobs\WarmUpSystemOne;
 use App\Models\Game;
 use App\Models\Team;
 use Illuminate\Contracts\View\View;
@@ -37,6 +38,18 @@ class Home extends Component
     {
         $this->teamId = $this->teams->first()?->id;
         $this->model = (string) config('manager.model');
+
+        WarmUpSystemOne::dispatch($this->model);
+    }
+
+    /**
+     * Switching model starts loading the new one straight away.
+     */
+    public function updatedModel(): void
+    {
+        if (array_key_exists($this->model, $this->models())) {
+            WarmUpSystemOne::dispatch($this->model);
+        }
     }
 
     /**

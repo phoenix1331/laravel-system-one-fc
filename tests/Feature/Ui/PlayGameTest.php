@@ -208,7 +208,25 @@ it('ignores a lock in while the clock is running', function (): void {
     $component = Livewire::test(PlayGame::class, ['game' => $game])->call('lockIn')->call('resume');
     $component->call('lockIn');
 
-    expect($game->decisions()->count())->toBe(2);
+    expect($game->decisions()->where('side', Dugout::Human)->count())->toBe(1);
+});
+
+it('has the model\'s next answer ready before play pauses, without asking twice', function (): void {
+    Http::fake(['*' => Http::response(modelReply('defensive'))]);
+    $game = kickOff(7);
+
+    $component = Livewire::test(PlayGame::class, ['game' => $game])->call('lockIn')->call('resume');
+
+    expect($game->refresh()->decisionAt(2, Dugout::Model))->not->toBeNull();
+
+    while (! $game->refresh()->isDeciding()) {
+        $component->call('advance');
+    }
+
+    $component->assertSee('System One has decided. Hidden until you lock in.')
+        ->assertDontSee('System One is thinking...');
+
+    expect(Http::recorded(fn ($request): bool => str_ends_with($request->url(), '/v1/systemone')))->toHaveCount(2);
 });
 
 it('shows the latest concern only once the model\'s decision is revealed', function (): void {

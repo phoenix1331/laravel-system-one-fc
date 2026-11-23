@@ -267,3 +267,35 @@ it('predicts every goal one tick before it is scored, and nothing else', functio
         ->and($predicted)->toBeGreaterThan(0)
         ->and(runner()->upcomingGoal($game))->toBeNull();
 });
+
+it('predicts the state play will pause at, and nothing while paused', function (): void {
+    $game = startGame(5);
+    expect(runner()->nextPause($game))->toBeNull();
+
+    decideBoth($game);
+    $predicted = runner()->nextPause($game)->toArray();
+
+    while (! $game->refresh()->isDeciding()) {
+        runner()->tick($game);
+    }
+
+    expect($game->engine_state)->toBe($predicted);
+});
+
+it('predicts no pause when full time comes first', function (): void {
+    $game = startGame(3);
+    $guard = 0;
+
+    while ((runner()->nextPause($game->refresh()) !== null || $game->isDeciding()) && $guard++ < 500) {
+        if ($game->isDeciding()) {
+            decideBoth($game);
+
+            continue;
+        }
+
+        runner()->tick($game);
+    }
+
+    expect($game->status)->toBe(GameStatus::InProgress)
+        ->and(runner()->nextPause($game))->toBeNull();
+});
