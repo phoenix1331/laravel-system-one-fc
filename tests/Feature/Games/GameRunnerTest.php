@@ -242,3 +242,28 @@ it('applies substitutions on resume and logs them even without a tactical change
         ->and($game->events()->where('type', GameEvent::DECISION)->pluck('commentary')->all())
         ->toBe(['Bala Town go Balanced and hold their shape, bringing on fresh legs.']);
 });
+
+it('predicts every goal one tick before it is scored, and nothing else', function (): void {
+    $game = startGame(3);
+    $predicted = 0;
+    $guard = 0;
+
+    while (! $game->refresh()->isFinished() && $guard++ < 500) {
+        if ($game->isDeciding()) {
+            expect(runner()->upcomingGoal($game))->toBeNull();
+            decideBoth($game);
+
+            continue;
+        }
+
+        $upcoming = runner()->upcomingGoal($game);
+        $goal = collect(runner()->tick($game))->firstWhere('type', 'goal');
+
+        expect($upcoming)->toBe($goal?->side);
+        $predicted += $upcoming === null ? 0 : 1;
+    }
+
+    expect($predicted)->toBe($game->human_score + $game->model_score)
+        ->and($predicted)->toBeGreaterThan(0)
+        ->and(runner()->upcomingGoal($game))->toBeNull();
+});

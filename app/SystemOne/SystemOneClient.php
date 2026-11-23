@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\SystemOne;
 
+use App\Enums\ModelStatus;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as Http;
 
@@ -43,26 +44,42 @@ final readonly class SystemOneClient
      */
     public function warmUp(int $timeout = 180): void
     {
+        // Already loaded, or not an Ollama we can reach or read, so leave it alone.
+        if ($this->status() !== ModelStatus::Asleep) {
+            return;
+        }
+
         try {
-            $loaded = $this->http->baseUrl($this->baseUrl)->acceptJson()->timeout(5)->get('/api/ps')->json('models');
-
-            // Not an Ollama we can read, so leave it alone.
-            if (! is_array($loaded)) {
-                return;
-            }
-
-            foreach ($loaded as $model) {
-                if (is_array($model) && ($model['name'] ?? null) === $this->model) {
-                    return;
-                }
-            }
-
             $this->http->baseUrl($this->baseUrl)->acceptJson()->timeout($timeout)->post('/v1/systemone', $this->payload('warm up', [
                 'ready' => ['type' => 'noul', 'instructions' => 'Is this a test?'],
             ]));
         } catch (ConnectionException) {
             return;
         }
+    }
+
+    /**
+     * Whether this model is loaded, by asking Ollama's /api/ps what is in memory.
+     */
+    public function status(int $timeout = 3): ModelStatus
+    {
+        try {
+            $loaded = $this->http->baseUrl($this->baseUrl)->acceptJson()->timeout($timeout)->get('/api/ps')->json('models');
+        } catch (ConnectionException) {
+            return ModelStatus::Offline;
+        }
+
+        if (! is_array($loaded)) {
+            return ModelStatus::Offline;
+        }
+
+        foreach ($loaded as $model) {
+            if (is_array($model) && ($model['name'] ?? null) === $this->model) {
+                return ModelStatus::Ready;
+            }
+        }
+
+        return ModelStatus::Asleep;
     }
 
     /**

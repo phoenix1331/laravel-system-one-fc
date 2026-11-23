@@ -8,6 +8,7 @@ use App\Enums\GameStatus;
 use App\Games\GameRunner;
 use App\Jobs\DecideForSystemOne;
 use App\Livewire\Pages\PlayGame;
+use App\Livewire\SystemOneStatus;
 use App\Managers\Decision;
 use App\Managers\SystemOneManager;
 use App\Models\Game;
@@ -270,4 +271,42 @@ it('rejects a substitution that does not exist', function (): void {
         ->set('substitution', 'goalkeeper_up_front')
         ->call('lockIn')
         ->assertHasErrors(['substitution']);
+});
+
+it('only disables the lock in button while locking in, not on every poll', function (): void {
+    Queue::fake();
+
+    Livewire::test(PlayGame::class, ['game' => kickOff()])
+        ->assertSeeHtml('wire:loading.attr="disabled" wire:target="lockIn"');
+});
+
+it('flags a big chance next to the club about to score', function (): void {
+    Http::fake(['*' => Http::response(modelReply('balanced'))]);
+    $game = kickOff(3);
+    $component = Livewire::test(PlayGame::class, ['game' => $game])->call('lockIn')->call('resume');
+    $guard = 0;
+
+    while (app(GameRunner::class)->upcomingGoal($game->refresh()) === null && $guard++ < 500) {
+        if ($game->isDeciding()) {
+            $component->call('lockIn')->call('resume');
+
+            continue;
+        }
+
+        $component->call('advance');
+    }
+
+    $component->call('$refresh')->assertSee('Big chance');
+
+    $component->call('advance')->assertDontSee('Big chance');
+    expect($game->refresh()->events()->where('type', 'goal')->exists())->toBeTrue();
+});
+
+it('lazy loads the System One status dot so the page never waits on Ollama', function (): void {
+    Queue::fake();
+
+    Livewire::test(PlayGame::class, ['game' => kickOff()])
+        ->assertSeeLivewire(SystemOneStatus::class);
+
+    Http::assertNothingSent();
 });

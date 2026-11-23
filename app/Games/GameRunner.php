@@ -6,6 +6,7 @@ namespace App\Games;
 
 use App\Engine\DecisionPoints;
 use App\Engine\EngineConfig;
+use App\Engine\EventType;
 use App\Engine\MatchEngine;
 use App\Engine\MatchState;
 use App\Engine\Phase;
@@ -109,6 +110,28 @@ final readonly class GameRunner
 
             return $stored;
         });
+    }
+
+    /**
+     * Which dugout scores in the next step, found by playing it on throwaway copies of the
+     * state and Randomizer. Tactics only change at decision points, so while the clock runs
+     * the next tick plays out exactly as this preview does.
+     */
+    public function upcomingGoal(Game $game): ?Dugout
+    {
+        if ($game->status !== GameStatus::InProgress) {
+            return null;
+        }
+
+        $events = $this->engine($this->loadRandomizer($game))->advance($game->state());
+
+        foreach ($events as $event) {
+            if ($event->type === EventType::Goal && $event->side !== null) {
+                return Dugout::fromSide($event->side);
+            }
+        }
+
+        return null;
     }
 
     /**

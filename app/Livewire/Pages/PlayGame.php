@@ -157,6 +157,7 @@ class PlayGame extends Component
             'progress' => $this->progress($state),
             'goals' => $this->goalMarkers(),
             'possession' => $this->possession($state),
+            'bigChance' => app(GameRunner::class)->upcomingGoal($this->game),
             'mentalities' => Mentality::cases(),
             'substitutions' => Substitution::cases(),
             'subsLeft' => $state->home->substitutionsLeft(app(EngineConfig::class)),

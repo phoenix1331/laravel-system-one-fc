@@ -57,6 +57,6 @@
             </button>
         </div>
 
-        <button type="submit" class="btn-primary w-full" wire:loading.attr="disabled">Lock in decision</button>
+        <button type="submit" class="btn-primary w-full" wire:loading.attr="disabled" wire:target="lockIn">Lock in decision</button>
     </form>
 </section>

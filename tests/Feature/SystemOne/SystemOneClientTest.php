@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ModelStatus;
 use App\SystemOne\SystemOneClient;
 use App\SystemOne\SystemOneException;
 use Illuminate\Http\Client\ConnectionException;
@@ -118,3 +119,14 @@ it('ignores a warm up that cannot reach Ollama', function (): void {
 
     Http::assertSentCount(0);
 });
+
+it('reports whether the model is loaded, asleep or unreachable', function (mixed $response, ModelStatus $expected): void {
+    Http::fake(['*/api/ps' => $response]);
+
+    expect(app(SystemOneClient::class)->status())->toBe($expected);
+})->with([
+    'loaded' => [fn () => Http::response(['models' => [['name' => 'd3:2b']]]), ModelStatus::Ready],
+    'another model loaded' => [fn () => Http::response(['models' => [['name' => 'd3:4b']]]), ModelStatus::Asleep],
+    'unreadable' => [fn () => Http::response('nope', 500), ModelStatus::Offline],
+    'refused' => [fn () => fn () => throw new ConnectionException('refused'), ModelStatus::Offline],
+]);

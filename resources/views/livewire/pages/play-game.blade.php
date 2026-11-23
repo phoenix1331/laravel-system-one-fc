@@ -14,9 +14,12 @@
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div>
                 <span class="inline-block rounded-full bg-you-chip px-3 py-1 text-xs font-semibold text-you-text">You</span>
-                <div class="mt-2 flex items-center gap-3">
+                <div class="mt-2 flex flex-wrap items-center gap-3">
                     <x-club-badge :name="$human->name" size="size-10 sm:size-14" />
                     <p class="font-display text-xl font-bold sm:text-3xl">{{ $human->name }}</p>
+                    @if ($bigChance === Dugout::Human)
+                        <span class="animate-pulse rounded-full bg-you px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-bg">Big chance</span>
+                    @endif
                 </div>
             </div>
 
@@ -28,8 +31,14 @@
             </div>
 
             <div class="text-right">
-                <span class="inline-block rounded-full bg-s1-chip px-3 py-1 text-xs font-semibold text-s1-text">System One</span>
-                <div class="mt-2 flex items-center justify-end gap-3">
+                <span class="inline-flex items-center gap-2 rounded-full bg-s1-chip px-3 py-1 text-xs font-semibold text-s1-text">
+                    <livewire:system-one-status :model="$game->model" />
+                    System One
+                </span>
+                <div class="mt-2 flex flex-wrap items-center justify-end gap-3">
+                    @if ($bigChance === Dugout::Model)
+                        <span class="animate-pulse rounded-full bg-s1 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-bg">Big chance</span>
+                    @endif
                     <p class="font-display text-xl font-bold sm:text-3xl">{{ $model->name }}</p>
                     <x-club-badge :name="$model->name" size="size-10 sm:size-14" />
                 </div>
